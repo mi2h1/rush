@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Article } from '../types';
 import { fetchSourceLatest } from '../lib/appwrite';
-import { fetchZennWeekly } from '../lib/trending';
+import { fetchZennWeekly, fetchQiitaPopular } from '../lib/trending';
 import { ColumnCard } from './CategoryColumns';
 
 interface ColumnProps {
@@ -41,7 +41,7 @@ export function ServiceColumns() {
 
   useEffect(() => {
     fetchZennWeekly(5).then(setZenn).finally(() => setZennLoading(false));
-    fetchSourceLatest('Qiita', 5).then(setQiita).finally(() => setQiitaLoading(false));
+    fetchQiitaPopular(5).then(setQiita).finally(() => setQiitaLoading(false));
     fetchSourceLatest('note', 5).then(setNote).finally(() => setNoteLoading(false));
   }, []);
 
@@ -50,7 +50,7 @@ export function ServiceColumns() {
       <h2 className="section-title">サービス別</h2>
       <div className="category-columns">
         <ServiceColumn title="Zenn" badge="週間人気5件" articles={zenn} loading={zennLoading} />
-        <ServiceColumn title="Qiita" badge="最新5件" articles={qiita} loading={qiitaLoading} />
+        <ServiceColumn title="Qiita" badge="人気5件" articles={qiita} loading={qiitaLoading} />
         <ServiceColumn title="note" badge="最新5件" articles={note} loading={noteLoading} />
       </div>
     </section>
