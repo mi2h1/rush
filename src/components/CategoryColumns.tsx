@@ -2,11 +2,10 @@ import { type Article, type CategoryId } from '../types';
 import { Thumbnail } from './Thumbnail';
 import { formatRelativeTime } from '../lib/time';
 
-const COLUMNS: { id: Exclude<CategoryId, 'all' | 'other'>; label: string }[] = [
+const COLUMNS: { id: Exclude<CategoryId, 'all' | 'other' | 'meta'>; label: string }[] = [
   { id: 'openai', label: 'OpenAI' },
   { id: 'anthropic', label: 'Anthropic' },
   { id: 'google', label: 'Google' },
-  { id: 'meta', label: 'Meta' },
 ];
 
 const SOURCE_ICON: Record<string, string> = {

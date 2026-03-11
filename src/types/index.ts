@@ -19,6 +19,5 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: 'openai', label: 'OpenAI' },
   { id: 'anthropic', label: 'Anthropic' },
   { id: 'google', label: 'Google' },
-  { id: 'meta', label: 'Meta' },
   { id: 'other', label: 'その他' },
 ];

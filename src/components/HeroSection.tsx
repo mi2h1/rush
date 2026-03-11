@@ -1,6 +1,5 @@
 import { type Article } from '../types';
 import { Thumbnail } from './Thumbnail';
-import { XTimeline } from './XTimeline';
 import { formatRelativeTime } from '../lib/time';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -16,8 +15,6 @@ const SOURCE_ICON: Record<string, string> = {
 
 interface Props {
   articles: Article[];
-  xArticles: Article[];
-  xLoading?: boolean;
 }
 
 function HeroMainCard({ article }: { article: Article }) {
@@ -57,22 +54,17 @@ function HeroSideCard({ article }: { article: Article }) {
   );
 }
 
-export function HeroSection({ articles, xArticles, xLoading }: Props) {
+export function HeroSection({ articles }: Props) {
   if (articles.length === 0) return null;
   const [main, ...sides] = articles;
   return (
     <section className="section">
       <h2 className="section-title">新着記事</h2>
-      <div className="hero-grid">
-        <div className="hero-articles">
-          <HeroMainCard article={main} />
-          <div className="hero-bottom-grid">
-            {sides.slice(0, 4).map((a) => (
-              <HeroSideCard key={a.id} article={a} />
-            ))}
-          </div>
-        </div>
-        <XTimeline articles={xArticles} loading={xLoading} />
+      <HeroMainCard article={main} />
+      <div className="hero-bottom-grid">
+        {sides.slice(0, 4).map((a) => (
+          <HeroSideCard key={a.id} article={a} />
+        ))}
       </div>
     </section>
   );

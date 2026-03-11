@@ -6,6 +6,7 @@ import { HeroSection } from './components/HeroSection';
 import { CategoryColumns } from './components/CategoryColumns';
 import { HotSection } from './components/HotSection';
 import { fetchArticles, fetchXArticles } from './lib/appwrite';
+import { XTimeline } from './components/XTimeline';
 import { isToday } from './lib/time';
 import type { Article, CategoryId } from './types';
 import './App.css';
@@ -65,11 +66,14 @@ export default function App() {
         )}
 
         {!loading && !error && isAllView && (
-          <>
-            <HeroSection articles={heroArticles} xArticles={xArticles} xLoading={xLoading} />
-            <CategoryColumns articles={articles} />
-            <HotSection articles={hotArticles} />
-          </>
+          <div className="main-columns">
+            <div className="main-left">
+              <HeroSection articles={heroArticles} />
+              <CategoryColumns articles={articles} />
+              <HotSection articles={hotArticles} />
+            </div>
+            <XTimeline articles={xArticles} loading={xLoading} />
+          </div>
         )}
 
         {!loading && !error && !isAllView && (
