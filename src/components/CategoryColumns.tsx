@@ -22,7 +22,7 @@ interface Props {
 function ColumnCard({ article }: { article: Article }) {
   return (
     <a href={article.url} target="_blank" rel="noopener noreferrer" className="column-card">
-      <Thumbnail url={article.thumbnailUrl} category={article.category} size="small" />
+      <Thumbnail url={article.thumbnailUrl} category={article.category} source={article.source} size="small" />
       <div className="column-card-body">
         <p className="column-card-title">{article.title}</p>
         <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>

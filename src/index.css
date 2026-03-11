@@ -267,6 +267,12 @@ a { color: inherit; text-decoration: none; }
   background: linear-gradient(135deg, var(--cat-color, #30363d) 0%, #0d1117 100%);
   opacity: 0.4;
 }
+.thumbnail-placeholder { display: flex; align-items: center; justify-content: center; }
+.thumb-logo { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.75; }
+.thumb-logo-icon { width: 32px; height: 32px; }
+.thumb-logo-text { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+.thumbnail-small .thumb-logo-icon { width: 20px; height: 20px; }
+
 .thumbnail-placeholder[class*="cat-"] { --cat-color: var(--other); }
 .thumbnail-placeholder.cat-openai    { --cat-color: var(--openai); }
 .thumbnail-placeholder.cat-anthropic { --cat-color: var(--anthropic); }

@@ -20,7 +20,7 @@ interface Props {
 function HeroMainCard({ article }: { article: Article }) {
   return (
     <a href={article.url} target="_blank" rel="noopener noreferrer" className="hero-main-card">
-      <Thumbnail url={article.thumbnailUrl} category={article.category} size="large" />
+      <Thumbnail url={article.thumbnailUrl} category={article.category} source={article.source} size="large" />
       <div className="hero-main-body">
         <div className="card-header">
           <span className={`category-badge cat-${article.category}`}>{CATEGORY_LABEL[article.category]}</span>
@@ -41,7 +41,7 @@ function HeroMainCard({ article }: { article: Article }) {
 function HeroSideCard({ article }: { article: Article }) {
   return (
     <a href={article.url} target="_blank" rel="noopener noreferrer" className="hero-side-card">
-      <Thumbnail url={article.thumbnailUrl} category={article.category} size="small" />
+      <Thumbnail url={article.thumbnailUrl} category={article.category} source={article.source} size="small" />
       <div className="hero-side-body">
         <span className={`category-badge cat-${article.category}`}>{CATEGORY_LABEL[article.category]}</span>
         <p className="hero-side-title">{article.title}</p>

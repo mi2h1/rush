@@ -32,7 +32,7 @@ export function HotSection({ articles }: Props) {
             className={`hot-card article-card`}
             data-category={article.category}
           >
-            <Thumbnail url={article.thumbnailUrl} category={article.category} size="large" />
+            <Thumbnail url={article.thumbnailUrl} category={article.category} source={article.source} size="large" />
             <div className="hot-card-body">
               <div className="card-header">
                 <span className={`category-badge cat-${article.category}`}>
