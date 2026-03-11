@@ -55,6 +55,17 @@ export async function fetchSourceLatest(source: string, limit = 5): Promise<Arti
   return res.documents.map(mapDoc);
 }
 
+/** Zenn週間人気: likeCount降順 */
+export async function fetchZennPopular(limit = 5): Promise<Article[]> {
+  const res = await databases.listDocuments(DB_ID, COLLECTION_ID, [
+    Query.equal('source', 'Zenn'),
+    Query.greaterThan('likeCount', 0),
+    Query.orderDesc('likeCount'),
+    Query.limit(limit),
+  ]);
+  return res.documents.map(mapDoc);
+}
+
 /** 記事一覧ページ用: ソース・カテゴリフィルター + ページネーション */
 export async function fetchArticleList(opts: {
   source?: string;

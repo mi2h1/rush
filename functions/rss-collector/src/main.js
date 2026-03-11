@@ -105,10 +105,25 @@ async function fetchZennArticles(pages = 5) {
         publishedAt: a.published_at ?? new Date().toISOString(),
         description: a.title ?? '',
         thumbnailUrl: a.og_image_url ?? null,
+        likeCount: a.liked_count ?? 0,
       });
     }
   }
   return items;
+}
+
+// Zenn 週間人気取得（likeCount更新用）
+async function fetchZennWeekly(count = 20) {
+  const res = await fetch(
+    `https://zenn.dev/api/articles?topic_slug=ai&order=weekly&count=${count}`,
+    { headers: { 'User-Agent': 'Rush RSS Collector/1.0' }, signal: AbortSignal.timeout(10000) }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.articles ?? []).map((a) => ({
+    url: `https://zenn.dev${a.path}`,
+    likeCount: a.liked_count ?? 0,
+  }));
 }
 
 // note API でページネーション取得
@@ -260,6 +275,7 @@ export default async ({ req, res, log, error }) => {
             tags: [],
             isHot: false,
             ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
+            ...(item.likeCount != null ? { likeCount: item.likeCount } : {}),
           });
           totalNew++;
         } catch (e) {
@@ -393,6 +409,22 @@ export default async ({ req, res, log, error }) => {
           error(`DB save error for "${item.title}": ${e.message}`);
         }
       }
+    }
+
+    // Zenn週間人気のlikeCountを更新
+    try {
+      log('Updating Zenn weekly likeCount...');
+      const weeklyItems = await fetchZennWeekly(20);
+      let updated = 0;
+      for (const item of weeklyItems) {
+        const found = await db.listDocuments('rush-db', 'articles', [Query.equal('url', item.url), Query.limit(1)]);
+        if (found.total === 0) continue;
+        await db.updateDocument('rush-db', 'articles', found.documents[0].$id, { likeCount: item.likeCount });
+        updated++;
+      }
+      log(`  Updated likeCount for ${updated} Zenn articles`);
+    } catch (e) {
+      error(`Zenn likeCount update error: ${e.message}`);
     }
   }
 
