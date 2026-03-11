@@ -3,13 +3,41 @@ import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ArticleCard } from './components/ArticleCard';
 import { HeroSection } from './components/HeroSection';
-import { CategoryColumns, ColumnCard } from './components/CategoryColumns';
+import { CategoryColumns } from './components/CategoryColumns';
 import { HotSection } from './components/HotSection';
 import { fetchArticles, fetchXArticles } from './lib/appwrite';
 import { XTimeline } from './components/XTimeline';
+import { Thumbnail } from './components/Thumbnail';
 import { isToday } from './lib/time';
+import { formatRelativeTime } from './lib/time';
 import type { Article, CategoryId } from './types';
 import './App.css';
+
+function OtherCard({ article }: { article: Article }) {
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="other-card"
+      data-category={article.category}
+    >
+      <Thumbnail url={article.thumbnailUrl} category={article.category} source={article.source} size="large" />
+      <div className="hot-card-body">
+        <p className="hot-card-title">{article.title}</p>
+        <p className="card-summary">{article.summary}</p>
+        <div className="card-footer">
+          <div className="card-tags">
+            {(article.tags ?? []).slice(0, 2).map((tag) => (
+              <span key={tag} className="card-tag">#{tag}</span>
+            ))}
+          </div>
+          <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>
+        </div>
+      </div>
+    </a>
+  );
+}
 
 export default function App() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -81,7 +109,7 @@ export default function App() {
           <section className="section">
             <h2 className="section-title">その他</h2>
             <div className="other-grid">
-              {articles.map((a) => <ColumnCard key={a.id} article={a} />)}
+              {articles.map((a) => <OtherCard key={a.id} article={a} />)}
             </div>
           </section>
         )}

@@ -423,6 +423,22 @@ a { color: inherit; text-decoration: none; }
 .hot-card:hover .hot-card-title { color: var(--accent); }
 .hot-card .thumbnail-large { border-radius: 0; }
 
+/* ── その他カテゴリカード ────────────────────────── */
+.other-card {
+  display: flex; flex-direction: column; gap: 0; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border);
+  border-top: 3px solid var(--border); border-radius: 8px;
+  color: inherit; transition: background 0.15s;
+}
+.other-card:hover { background: var(--surface-hover); }
+.other-card:hover .hot-card-title { color: var(--accent); }
+.other-card .thumbnail-large { border-radius: 0; }
+.other-card[data-category="openai"]    { border-top-color: var(--openai); }
+.other-card[data-category="anthropic"] { border-top-color: var(--anthropic); }
+.other-card[data-category="google"]    { border-top-color: var(--google); }
+.other-card[data-category="meta"]      { border-top-color: var(--meta); }
+.other-card[data-category="other"]     { border-top-color: var(--other); }
+
 /* ── ステート表示 ─────────────────────────────────── */
 .state-message {
   color: var(--text-muted);
