@@ -5,7 +5,6 @@ import { XMLParser } from 'fast-xml-parser';
 const RSS_FEEDS = [
   { url: 'https://zenn.dev/topics/ai/feed', source: 'Zenn' },
   { url: 'https://qiita.com/tags/ai/feed', source: 'Qiita' },
-  // note は公式RSSがないため除外（将来的にRSSHub等で対応）
 ];
 
 const CATEGORY_KEYWORDS = {
@@ -15,7 +14,6 @@ const CATEGORY_KEYWORDS = {
   meta: ['meta', 'llama', 'faiss'],
 };
 
-// XMLパーサーが返す値（オブジェクト/文字列/数値）を文字列に統一する
 function toText(val) {
   if (!val) return '';
   if (typeof val === 'string') return val;
@@ -35,19 +33,15 @@ function detectCategory(text) {
 }
 
 function extractThumbnail(item) {
-  // media:content
   const mc = item['media:content'];
   if (mc) {
     const url = Array.isArray(mc) ? mc[0]?.['@_url'] : mc['@_url'];
     if (url) return url;
   }
-  // media:thumbnail
   const mt = item['media:thumbnail'];
   if (mt?.['@_url']) return mt['@_url'];
-  // enclosure (image type)
   const enc = item.enclosure;
   if (enc?.['@_url'] && String(enc?.['@_type'] ?? '').startsWith('image')) return enc['@_url'];
-  // first <img> in HTML description
   const html = toText(item.description ?? item['content:encoded'] ?? item.content ?? '');
   const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return m?.[1] ?? null;
@@ -67,7 +61,6 @@ function parseRss(xml) {
   const result = parser.parse(xml);
   const channel = result?.rss?.channel ?? result?.feed;
   if (!channel) return [];
-
   const items = channel.item ?? channel.entry ?? [];
   return (Array.isArray(items) ? items : [items]).map((item) => ({
     title: toText(item.title),
@@ -76,6 +69,55 @@ function parseRss(xml) {
     description: toText(item.description ?? item.summary ?? item.content ?? item['content:encoded']),
     thumbnailUrl: extractThumbnail(item),
   }));
+}
+
+// Zenn API でページネーション取得
+async function fetchZennArticles(pages = 5) {
+  const items = [];
+  for (let page = 1; page <= pages; page++) {
+    const res = await fetch(
+      `https://zenn.dev/api/articles?topic_slug=ai&order=latest&count=20&page=${page}`,
+      { headers: { 'User-Agent': 'Rush RSS Collector/1.0' }, signal: AbortSignal.timeout(10000) }
+    );
+    if (!res.ok) break;
+    const data = await res.json();
+    const articles = data.articles ?? [];
+    if (articles.length === 0) break;
+    for (const a of articles) {
+      items.push({
+        title: a.title ?? '',
+        url: `https://zenn.dev${a.path}`,
+        publishedAt: a.published_at ?? new Date().toISOString(),
+        description: a.title ?? '',
+        thumbnailUrl: a.og_image_url ?? null,
+      });
+    }
+  }
+  return items;
+}
+
+// Qiita API でページネーション取得
+async function fetchQiitaArticles(pages = 5) {
+  const items = [];
+  for (let page = 1; page <= pages; page++) {
+    const res = await fetch(
+      `https://qiita.com/api/v2/tags/ai/items?page=${page}&per_page=20`,
+      { headers: { 'User-Agent': 'Rush RSS Collector/1.0' }, signal: AbortSignal.timeout(10000) }
+    );
+    if (!res.ok) break;
+    const articles = await res.json();
+    if (articles.length === 0) break;
+    for (const a of articles) {
+      items.push({
+        title: a.title ?? '',
+        url: a.url ?? '',
+        publishedAt: a.created_at ?? new Date().toISOString(),
+        description: (a.body ?? '').slice(0, 500),
+        thumbnailUrl: null,
+      });
+    }
+  }
+  return items;
 }
 
 async function analyzeWithGroq(groq, title, description) {
@@ -122,62 +164,89 @@ export default async ({ req, res, log, error }) => {
   const db = new Databases(client);
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+  let bodyJson = {};
+  try { bodyJson = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {}); } catch {}
+  const backfill = bodyJson.backfill === true;
   let totalNew = 0;
   let totalSkipped = 0;
 
-  for (const feed of RSS_FEEDS) {
-    log(`Fetching: ${feed.url}`);
-    let items;
-    try {
-      const xml = await fetchRss(feed.url);
-      items = parseRss(xml);
-      log(`  ${items.length} items found`);
-    } catch (e) {
-      error(`Failed to fetch ${feed.url}: ${e.message}`);
-      continue;
+  if (backfill) {
+    // バックフィルモード: APIで複数ページ取得、AI処理なし
+    log('Backfill mode: fetching historical articles (no AI)');
+    const sources = [
+      { items: await fetchZennArticles(5), source: 'Zenn' },
+      { items: await fetchQiitaArticles(5), source: 'Qiita' },
+    ];
+    for (const { items, source } of sources) {
+      log(`${source}: ${items.length} items fetched`);
+      for (const item of items) {
+        if (!item.url || !item.title) continue;
+        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
+        const category = detectCategory(item.title + ' ' + item.description);
+        try {
+          await db.createDocument('rush-db', 'articles', ID.unique(), {
+            title: item.title.slice(0, 500),
+            source,
+            category,
+            url: item.url,
+            publishedAt: new Date(item.publishedAt).toISOString(),
+            summary: item.description.slice(0, 200) || item.title,
+            tags: [],
+            isHot: false,
+            ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
+          });
+          totalNew++;
+        } catch (e) {
+          error(`DB save error: ${e.message}`);
+        }
+      }
     }
-
-    for (const item of items.slice(0, 20)) {
-      if (!item.url || !item.title) continue;
-
-      if (await articleExists(db, item.url)) {
-        totalSkipped++;
+  } else {
+    // 通常モード: RSSで最新取得 + AI処理
+    for (const feed of RSS_FEEDS) {
+      log(`Fetching: ${feed.url}`);
+      let items;
+      try {
+        const xml = await fetchRss(feed.url);
+        items = parseRss(xml);
+        log(`  ${items.length} items found`);
+      } catch (e) {
+        error(`Failed to fetch ${feed.url}: ${e.message}`);
         continue;
       }
 
-      const category = detectCategory(item.title + ' ' + item.description);
+      for (const item of items.slice(0, 20)) {
+        if (!item.url || !item.title) continue;
+        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
+        const category = detectCategory(item.title + ' ' + item.description);
 
-      // Gemini free tier: 15 RPM → 4秒待機で安全マージン確保
-      await new Promise((r) => setTimeout(r, 4000));
+        await new Promise((r) => setTimeout(r, 2000));
 
-      let analysis;
-      try {
-        analysis = await analyzeWithGroq(groq, item.title, item.description);
-      } catch (e) {
-        error(`Gemini error for "${item.title}": ${e.message}`);
-        analysis = {
-          summary: item.description.slice(0, 200) || item.title,
-          tags: [],
-          isHot: false,
-        };
-      }
+        let analysis;
+        try {
+          analysis = await analyzeWithGroq(groq, item.title, item.description);
+        } catch (e) {
+          error(`Groq error for "${item.title}": ${e.message}`);
+          analysis = { summary: item.description.slice(0, 200) || item.title, tags: [], isHot: false };
+        }
 
-      try {
-        await db.createDocument('rush-db', 'articles', ID.unique(), {
-          title: item.title.slice(0, 500),
-          source: feed.source,
-          category,
-          url: item.url,
-          publishedAt: new Date(item.publishedAt).toISOString(),
-          summary: analysis.summary.slice(0, 2000),
-          tags: (analysis.tags ?? []).slice(0, 5).map((t) => String(t).slice(0, 50)),
-          isHot: analysis.isHot ?? false,
-          ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
-        });
-        totalNew++;
-        log(`  Saved: ${item.title.slice(0, 60)}`);
-      } catch (e) {
-        error(`DB save error for "${item.title}": ${e.message}`);
+        try {
+          await db.createDocument('rush-db', 'articles', ID.unique(), {
+            title: item.title.slice(0, 500),
+            source: feed.source,
+            category,
+            url: item.url,
+            publishedAt: new Date(item.publishedAt).toISOString(),
+            summary: analysis.summary.slice(0, 2000),
+            tags: (analysis.tags ?? []).slice(0, 5).map((t) => String(t).slice(0, 50)),
+            isHot: analysis.isHot ?? false,
+            ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
+          });
+          totalNew++;
+          log(`  Saved: ${item.title.slice(0, 60)}`);
+        } catch (e) {
+          error(`DB save error for "${item.title}": ${e.message}`);
+        }
       }
     }
   }
