@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ArticleCard } from './components/ArticleCard';
@@ -11,7 +11,15 @@ import { Thumbnail } from './components/Thumbnail';
 import { isToday } from './lib/time';
 import { formatRelativeTime } from './lib/time';
 import type { Article, CategoryId } from './types';
+import { CATEGORIES } from './types';
 import './App.css';
+
+const VALID_IDS = new Set(CATEGORIES.map((c) => c.id));
+
+function getCategoryFromUrl(): CategoryId {
+  const c = new URLSearchParams(window.location.search).get('c');
+  return VALID_IDS.has(c as CategoryId) ? (c as CategoryId) : 'all';
+}
 
 function OtherCard({ article }: { article: Article }) {
   return (
@@ -43,7 +51,7 @@ export default function App() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState<CategoryId>('all');
+  const [activeCategory, setActiveCategory] = useState<CategoryId>(getCategoryFromUrl);
   const [xArticles, setXArticles] = useState<Article[]>([]);
   const [xLoading, setXLoading] = useState(true);
 
@@ -55,6 +63,19 @@ export default function App() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [activeCategory]);
+
+  // ブラウザ戻る/進む対応
+  useEffect(() => {
+    const onPop = () => setActiveCategory(getCategoryFromUrl());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  const handleCategoryChange = useCallback((cat: CategoryId) => {
+    setActiveCategory(cat);
+    const search = cat === 'all' ? '' : `?c=${cat}`;
+    history.pushState(null, '', window.location.pathname + search);
+  }, []);
 
   useEffect(() => {
     setXLoading(true);
@@ -84,7 +105,7 @@ export default function App() {
   return (
     <div className="app">
       <Header />
-      <CategoryTabs active={activeCategory} onChange={setActiveCategory} />
+      <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
 
       <main className="main-content">
         {loading && <div className="state-message">読み込み中...</div>}
