@@ -60,11 +60,13 @@ export function HeroSection({ articles }: Props) {
   return (
     <section className="section">
       <h2 className="section-title">新着記事</h2>
-      <HeroMainCard article={main} />
-      <div className="hero-bottom-grid">
-        {sides.slice(0, 4).map((a) => (
-          <HeroSideCard key={a.id} article={a} />
-        ))}
+      <div className="hero-layout">
+        <HeroMainCard article={main} />
+        <div className="hero-side-list">
+          {sides.slice(0, 4).map((a) => (
+            <HeroSideCard key={a.id} article={a} />
+          ))}
+        </div>
       </div>
     </section>
   );
