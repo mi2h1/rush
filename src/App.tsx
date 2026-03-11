@@ -8,12 +8,18 @@ import { HotSection } from './components/HotSection';
 import { XTimeline } from './components/XTimeline';
 import { ArticleListPage } from './components/ArticleListPage';
 import { AdminPage } from './components/AdminPage';
+import { BookmarksPage } from './components/BookmarksPage';
+import { AuthProvider } from './context/AuthContext';
 import { fetchTopArticles, fetchXArticles } from './lib/supabase';
 import type { Article, PageId } from './types';
 import './App.css';
 
+const BASE = '/rush/';
+
 function getPageFromUrl(): PageId {
-  if (window.location.pathname.endsWith('/admin')) return 'admin';
+  const pathname = window.location.pathname;
+  if (pathname.endsWith('/admin')) return 'admin';
+  if (pathname.endsWith('/bookmarks')) return 'bookmarks';
   const p = new URLSearchParams(window.location.search).get('p');
   return p === 'articles' ? 'articles' : 'top';
 }
@@ -25,7 +31,6 @@ export default function App() {
   const [xArticles, setXArticles] = useState<Article[]>([]);
   const [xLoading, setXLoading] = useState(true);
 
-  // ブラウザ戻る/進む対応
   useEffect(() => {
     const onPop = () => setPage(getPageFromUrl());
     window.addEventListener('popstate', onPop);
@@ -34,8 +39,9 @@ export default function App() {
 
   const handlePageChange = useCallback((p: PageId) => {
     setPage(p);
-    const search = p === 'top' ? '' : `?p=${p}`;
-    history.pushState(null, '', window.location.pathname + search);
+    if (p === 'admin') history.pushState(null, '', BASE + 'admin');
+    else if (p === 'bookmarks') history.pushState(null, '', BASE + 'bookmarks');
+    else history.pushState(null, '', BASE + (p === 'top' ? '' : `?p=${p}`));
   }, []);
 
   useEffect(() => {
@@ -55,38 +61,41 @@ export default function App() {
   const hotArticles = useMemo(() => articles.filter((a) => a.isHot), [articles]);
 
   return (
-    <div className="app">
-      <Header />
-      <PageNav active={page} onChange={handlePageChange} />
+    <AuthProvider>
+      <div className="app">
+        <Header onNavigate={handlePageChange} />
+        <PageNav active={page} onChange={handlePageChange} />
 
-      <main className="main-content">
-        {page === 'top' && (
-          <>
-            {loading && <div className="state-message">読み込み中...</div>}
-            {!loading && (
-              <div className="top-layout">
-                <HeroSection articles={heroArticles} />
-                <div className="top-body">
-                  <div className="top-left">
-                    <div className="top-services">
-                      <ZennColumn />
-                      <QiitaColumn />
+        <main className="main-content">
+          {page === 'top' && (
+            <>
+              {loading && <div className="state-message">読み込み中...</div>}
+              {!loading && (
+                <div className="top-layout">
+                  <HeroSection articles={heroArticles} />
+                  <div className="top-body">
+                    <div className="top-left">
+                      <div className="top-services">
+                        <ZennColumn />
+                        <QiitaColumn />
+                      </div>
+                      <HotSection articles={hotArticles} />
                     </div>
-                    <HotSection articles={hotArticles} />
-                  </div>
-                  <div className="top-right">
-                    <XTimeline articles={xArticles} loading={xLoading} />
+                    <div className="top-right">
+                      <XTimeline articles={xArticles} loading={xLoading} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
 
-        {page === 'articles' && <ArticleListPage />}
-        {page === 'admin' && <AdminPage />}
-      </main>
-      <Footer />
-    </div>
+          {page === 'articles' && <ArticleListPage />}
+          {page === 'bookmarks' && <BookmarksPage />}
+          {page === 'admin' && <AdminPage />}
+        </main>
+        <Footer />
+      </div>
+    </AuthProvider>
   );
 }

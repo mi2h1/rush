@@ -1,6 +1,7 @@
 import { type Article } from '../types';
 import { Thumbnail } from './Thumbnail';
 import { formatRelativeTime } from '../lib/time';
+import { BookmarkButton } from './BookmarkButton';
 
 const CATEGORY_LABEL: Record<string, string> = {
   openai: 'OpenAI', anthropic: 'Anthropic', google: 'Google',
@@ -52,6 +53,7 @@ export function HotSection({ articles }: Props) {
                     <img src={SOURCE_ICON[article.source]} alt={article.source} className="source-icon" />
                   )}
                   <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>
+                  <BookmarkButton articleId={article.id} />
                 </div>
               </div>
             </div>

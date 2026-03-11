@@ -97,6 +97,31 @@ export function onAuthStateChange(cb: (session: boolean) => void) {
   return supabase.auth.onAuthStateChange((_event, session) => cb(!!session));
 }
 
+// ── Bookmarks ────────────────────────────────────────────
+export async function fetchBookmarkedIds(): Promise<string[]> {
+  const { data } = await supabase.from('bookmarks').select('article_id');
+  return (data ?? []).map((r) => r.article_id);
+}
+
+export async function addBookmark(articleId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('bookmarks').insert({ article_id: articleId, user_id: user.id });
+}
+
+export async function removeBookmark(articleId: string): Promise<void> {
+  await supabase.from('bookmarks').delete().eq('article_id', articleId);
+}
+
+export async function fetchBookmarkedArticles(): Promise<Article[]> {
+  const { data } = await supabase
+    .from('bookmarks')
+    .select('articles!inner(*)')
+    .order('created_at', { ascending: false });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((r: any) => mapRow(r.articles));
+}
+
 // ── x_users CRUD ────────────────────────────────────────
 export async function fetchXUsers(): Promise<XUser[]> {
   const { data } = await supabase

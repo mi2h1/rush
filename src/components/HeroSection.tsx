@@ -1,6 +1,7 @@
 import { type Article } from '../types';
 import { Thumbnail } from './Thumbnail';
 import { formatRelativeTime } from '../lib/time';
+import { BookmarkButton } from './BookmarkButton';
 
 const CATEGORY_LABEL: Record<string, string> = {
   openai: 'OpenAI', anthropic: 'Anthropic', google: 'Google',
@@ -29,9 +30,12 @@ function HeroMainCard({ article }: { article: Article }) {
         <p className="hero-main-summary">{article.summary}</p>
         <div className="hero-main-footer">
           <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>
-          {SOURCE_ICON[article.source] && (
-            <img src={SOURCE_ICON[article.source]} alt={article.source} className="source-icon" />
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {SOURCE_ICON[article.source] && (
+              <img src={SOURCE_ICON[article.source]} alt={article.source} className="source-icon" />
+            )}
+            <BookmarkButton articleId={article.id} />
+          </div>
         </div>
       </div>
     </a>

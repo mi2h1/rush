@@ -1,6 +1,7 @@
 import type { Article } from '../types';
 import { Thumbnail } from './Thumbnail';
 import { formatRelativeTime } from '../lib/time';
+import { BookmarkButton } from './BookmarkButton';
 
 const CATEGORY_LABEL: Record<string, string> = {
   openai: 'OpenAI', anthropic: 'Anthropic', google: 'Google', other: 'その他',
@@ -23,6 +24,7 @@ export function GridCard({ article }: { article: Article }) {
             {CATEGORY_LABEL[article.category] ?? article.category}
           </span>
           <span className={`source-badge ${article.source.toLowerCase()}`}>{article.source}</span>
+          <BookmarkButton articleId={article.id} />
         </div>
         <p className="hot-card-title">{article.title}</p>
         <p className="card-summary">{article.summary}</p>

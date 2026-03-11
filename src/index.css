@@ -61,6 +61,26 @@ a { color: inherit; text-decoration: none; }
 }
 .logo-tagline { font-size: 11px; color: var(--text-muted); }
 .header-sources { display: flex; gap: 8px; }
+.header-bookmarks-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 6px;
+  border: 1px solid var(--border); background: none;
+  color: var(--text-muted); font-size: 12px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.header-bookmarks-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── ブックマークボタン ───────────────────────────── */
+.bookmark-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 4px;
+  border: none; background: none;
+  color: var(--text-muted); cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.bookmark-btn:hover { color: var(--accent); background: rgba(88,166,255,0.1); }
+.bookmark-btn-on { color: var(--accent); }
 
 /* ── ソースバッジ ─────────────────────────────────── */
 .source-badge {

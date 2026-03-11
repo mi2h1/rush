@@ -23,7 +23,7 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: 'other', label: 'その他' },
 ];
 
-export type PageId = 'top' | 'articles' | 'admin';
+export type PageId = 'top' | 'articles' | 'admin' | 'bookmarks';
 
 export interface XUser {
   id: string;
