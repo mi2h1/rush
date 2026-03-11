@@ -218,36 +218,49 @@ export default async ({ req, res, log, error }) => {
     }
   } else {
     // 通常モード: RSSで最新取得 + AI処理
-    // X フィード収集（RSSHub経由、AI処理なし）
-    const X_FEED_URL = 'http://210.131.219.93:1200/twitter/keyword/%23claude%20OR%20%23claudecode%20OR%20%23codex%20OR%20%23openai%20OR%20%23chatgpt%20OR%20%23%E7%94%9F%E6%88%90AI%20lang%3Aja%20-is%3Aretweet%20-%E3%82%A4%E3%83%A9%E3%82%B9%E3%83%88';
-    try {
-      log('Fetching X feed via RSSHub...');
-      const xml = await fetchRss(X_FEED_URL);
-      const xItems = parseRss(xml);
-      log(`  X: ${xItems.length} items found`);
-      for (const item of xItems) {
-        if (!item.url || !item.title) continue;
-        const { text: cleanText, thumbnailUrl: xThumb } = processHtml(item.description);
-        if (!isJapanese(item.title + ' ' + cleanText)) { totalSkipped++; continue; }
-        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
-        const fullText = item.title + ' ' + cleanText;
-        const category = detectCategory(fullText);
-        const hashtags = (fullText.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
-          .map((t) => t.slice(1).slice(0, 50)).slice(0, 5);
-        const { error: err } = await db.from('articles').insert({
-          title: item.title.slice(0, 500),
-          source: 'X',
-          category,
-          url: item.url,
-          published_at: new Date(item.publishedAt).toISOString(),
-          summary: cleanText.slice(0, 2000) || item.title,
-          tags: hashtags,
-          is_hot: false,
-          ...(xThumb ? { thumbnail_url: xThumb } : {}),
-        });
-        if (err) error(`X save error: ${err.message}`);
-        else totalNew++;
+    // X フィード収集（RSSHub経由、ユーザー別、AI処理なし）
+    const X_USERS = [
+      'OpenAI', 'ChatGPTApp', 'AnthropicAI', 'claudeai',
+      'GoogleAI', 'GoogleDeepMind', 'GeminiApp', 'googleaidevs', 'googleaistudio',
+      'xai', 'sama', 'gdb', 'embirico', 'willdepue',
+      'DarioAmodei', 'alexalbert__', 'demishassabis', 'OriolVinyalsML', 'OfficialLoganK',
+      'emollick', 'mattshumer_', 'joisino_',
+      't_wada', 'laiso', 'azukiazusa9', 'mizchi',
+      'ollama', 'Alibaba_Qwen',
+    ];
+    let xTotal = 0;
+    for (const username of X_USERS) {
+      try {
+        const xml = await fetchRss(`http://210.131.219.93:1200/twitter/user/${username}`);
+        const xItems = parseRss(xml);
+        xTotal += xItems.length;
+        for (const item of xItems) {
+          if (!item.url || !item.title) continue;
+          if (await articleExists(db, item.url)) { totalSkipped++; continue; }
+          const { text: cleanText, thumbnailUrl: xThumb } = processHtml(item.description);
+          const fullText = item.title + ' ' + cleanText;
+          const category = detectCategory(fullText);
+          const hashtags = (fullText.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
+            .map((t) => t.slice(1).slice(0, 50)).slice(0, 5);
+          const { error: err } = await db.from('articles').insert({
+            title: item.title.slice(0, 500),
+            source: 'X',
+            category,
+            url: item.url,
+            published_at: new Date(item.publishedAt).toISOString(),
+            summary: cleanText.slice(0, 2000) || item.title,
+            tags: hashtags,
+            is_hot: false,
+            ...(xThumb ? { thumbnail_url: xThumb } : {}),
+          });
+          if (err) error(`X save error (${username}): ${err.message}`);
+          else totalNew++;
+        }
+      } catch (e) {
+        error(`X fetch error (${username}): ${e.message}`);
       }
+    }
+    log(`X: ${X_USERS.length} accounts processed`);
     } catch (e) {
       error(`X feed error: ${e.message}`);
     }
