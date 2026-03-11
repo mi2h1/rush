@@ -1,0 +1,58 @@
+name: DB Migration (one-time)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run migration
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          npm install pg
+          node -e "
+          const { Client } = require('pg');
+          const client = new Client({ connectionString: process.env.SUPABASE_DB_URL, ssl: { rejectUnauthorized: false } });
+          client.connect().then(async () => {
+            await client.query(\`
+              create table if not exists x_users (
+                id uuid primary key default gen_random_uuid(),
+                username text not null unique,
+                display_name text,
+                profile_image_url text,
+                enabled boolean not null default true,
+                created_at timestamptz not null default now()
+              )
+            \`);
+            await client.query('alter table x_users enable row level security');
+            await client.query(\`
+              do \\\$\\\$ begin
+                if not exists (select 1 from pg_policies where tablename='x_users' and policyname='public read') then
+                  create policy \"public read\" on x_users for select to anon using (true);
+                end if;
+              end \\\$\\\$
+            \`);
+            await client.query(\`
+              insert into x_users (username) values
+                ('OpenAI'),('ChatGPTApp'),('AnthropicAI'),('claudeai'),
+                ('GoogleAI'),('GoogleDeepMind'),('GeminiApp'),('googleaidevs'),('googleaistudio'),
+                ('xai'),('sama'),('gdb'),('embirico'),('willdepue'),
+                ('DarioAmodei'),('alexalbert__'),('demishassabis'),('OriolVinyalsML'),('OfficialLoganK'),
+                ('emollick'),('mattshumer_'),('joisino_'),
+                ('t_wada'),('laiso'),('azukiazusa9'),('mizchi'),
+                ('ollama'),('Alibaba_Qwen')
+              on conflict (username) do nothing
+            \`);
+            await client.query('alter table articles add column if not exists author_username text');
+            console.log('Migration done!');
+            await client.end();
+          }).catch(e => { console.error(e); process.exit(1); });
+          "
