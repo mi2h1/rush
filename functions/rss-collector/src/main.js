@@ -219,15 +219,11 @@ export default async ({ req, res, log, error }) => {
   } else {
     // 通常モード: RSSで最新取得 + AI処理
     // X フィード収集（RSSHub経由、ユーザー別、AI処理なし）
-    const X_USERS = [
-      'OpenAI', 'ChatGPTApp', 'AnthropicAI', 'claudeai',
-      'GoogleAI', 'GoogleDeepMind', 'GeminiApp', 'googleaidevs', 'googleaistudio',
-      'xai', 'sama', 'gdb', 'embirico', 'willdepue',
-      'DarioAmodei', 'alexalbert__', 'demishassabis', 'OriolVinyalsML', 'OfficialLoganK',
-      'emollick', 'mattshumer_', 'joisino_',
-      't_wada', 'laiso', 'azukiazusa9', 'mizchi',
-      'ollama', 'Alibaba_Qwen',
-    ];
+    const { data: xUserRows } = await db
+      .from('x_users')
+      .select('username, display_name')
+      .eq('enabled', true);
+    const X_USERS = (xUserRows ?? []).map((r) => r.username);
     let xTotal = 0;
     for (const username of X_USERS) {
       try {
@@ -251,6 +247,7 @@ export default async ({ req, res, log, error }) => {
             summary: cleanText.slice(0, 2000) || item.title,
             tags: hashtags,
             is_hot: false,
+            author_username: username,
             ...(xThumb ? { thumbnail_url: xThumb } : {}),
           });
           if (err) error(`X save error (${username}): ${err.message}`);

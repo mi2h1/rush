@@ -7,6 +7,8 @@ interface Props {
 }
 
 function XPost({ article }: { article: Article }) {
+  const username = article.authorUsername
+    ?? article.url.match(/x\.com\/([^/]+)\/status/)?.[1];
   return (
     <a
       href={article.url}
@@ -14,6 +16,11 @@ function XPost({ article }: { article: Article }) {
       rel="noopener noreferrer"
       className="x-post"
     >
+      {username && (
+        <div className="x-post-author">
+          <span className="x-post-author-name">@{username}</span>
+        </div>
+      )}
       <p className="x-post-text">{article.summary || article.title}</p>
       {article.thumbnailUrl && (
         <img src={article.thumbnailUrl} alt="" className="x-post-image" loading="lazy" />

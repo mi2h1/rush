@@ -12,6 +12,7 @@ export interface Article {
   url: string;
   isHot?: boolean;
   thumbnailUrl?: string;
+  authorUsername?: string;
 }
 
 export const CATEGORIES: { id: CategoryId; label: string }[] = [

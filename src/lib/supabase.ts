@@ -19,6 +19,7 @@ function mapRow(row: any): Article {
     url: row.url,
     isHot: row.is_hot ?? false,
     thumbnailUrl: row.thumbnail_url ?? undefined,
+    authorUsername: row.author_username ?? undefined,
   };
 }
 
