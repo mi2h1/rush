@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
 import { PageNav } from './components/PageNav';
 import { HeroSection } from './components/HeroSection';
-import { ServiceColumns } from './components/ServiceColumns';
+import { ZennColumn, QiitaColumn } from './components/ServiceColumns';
 import { HotSection } from './components/HotSection';
 import { XTimeline } from './components/XTimeline';
 import { ArticleListPage } from './components/ArticleListPage';
@@ -61,13 +61,12 @@ export default function App() {
           <>
             {loading && <div className="state-message">読み込み中...</div>}
             {!loading && (
-              <div className="main-columns">
-                <div className="main-left">
-                  <HeroSection articles={heroArticles} />
-                  <ServiceColumns />
-                  <HotSection articles={hotArticles} />
-                </div>
-                <XTimeline articles={xArticles} loading={xLoading} />
+              <div className="top-layout">
+                <div className="top-hero"><HeroSection articles={heroArticles} /></div>
+                <div className="top-zenn"><ZennColumn /></div>
+                <div className="top-qiita"><QiitaColumn /></div>
+                <div className="top-x"><XTimeline articles={xArticles} loading={xLoading} /></div>
+                <div className="top-hot"><HotSection articles={hotArticles} /></div>
               </div>
             )}
           </>

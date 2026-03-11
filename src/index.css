@@ -299,14 +299,22 @@ a { color: inherit; text-decoration: none; }
 /* ── ソースアイコン ───────────────────────────────── */
 .source-icon { width: 14px; height: 14px; opacity: 0.4; flex-shrink: 0; }
 
-/* ── ページ2カラム ────────────────────────────────── */
-.main-columns {
+/* ── TOPページグリッド ─────────────────────────────── */
+.top-layout {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: 1fr 1fr 340px;
+  grid-template-areas:
+    "hero hero hero"
+    "zenn qiita x"
+    "hot  hot   x";
   gap: 20px;
   align-items: start;
 }
-.main-left { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.top-hero  { grid-area: hero; }
+.top-zenn  { grid-area: zenn; }
+.top-qiita { grid-area: qiita; }
+.top-x     { grid-area: x; align-self: stretch; display: flex; flex-direction: column; }
+.top-hot   { grid-area: hot; }
 
 /* ── ヒーローセクション ───────────────────────────── */
 .hero-bottom-grid {
@@ -338,9 +346,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 16px;
-  max-height: calc(100vh - 32px);
+  height: 100%;
 }
 .x-timeline-header {
   display: flex; align-items: center; gap: 8px;
@@ -493,8 +499,8 @@ a { color: inherit; text-decoration: none; }
 /* ── レスポンシブ ─────────────────────────────────── */
 @media (max-width: 1024px) {
   .category-columns { grid-template-columns: repeat(2, 1fr); }
-  .main-columns { grid-template-columns: 1fr; }
-  .x-timeline { position: static; max-height: 400px; }
+  .top-layout { grid-template-columns: 1fr 1fr; grid-template-areas: "hero hero" "zenn qiita" "hot hot" "x x"; }
+  .x-timeline { height: auto; max-height: 400px; }
   .hero-bottom-grid { grid-template-columns: repeat(2, 1fr); }
   .category-columns { grid-template-columns: 1fr; }
   .hero-side-list { display: grid; grid-template-columns: repeat(2, 1fr); }

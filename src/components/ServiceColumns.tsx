@@ -31,24 +31,20 @@ function ServiceColumn({ title, badge, articles, loading }: ColumnProps) {
   );
 }
 
-export function ServiceColumns() {
-  const [zenn, setZenn] = useState<Article[]>([]);
-  const [qiita, setQiita] = useState<Article[]>([]);
-  const [zennLoading, setZennLoading] = useState(true);
-  const [qiitaLoading, setQiitaLoading] = useState(true);
-
+export function ZennColumn() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetchSourceLatest('Zenn', 5).then(setZenn).finally(() => setZennLoading(false));
-    fetchQiitaPopular(5).then(setQiita).finally(() => setQiitaLoading(false));
+    fetchSourceLatest('Zenn', 5).then(setArticles).finally(() => setLoading(false));
   }, []);
+  return <ServiceColumn title="Zenn" badge="最新5件" articles={articles} loading={loading} />;
+}
 
-  return (
-    <section className="section">
-      <h2 className="section-title">サービス別</h2>
-      <div className="category-columns">
-        <ServiceColumn title="Zenn" badge="最新5件" articles={zenn} loading={zennLoading} />
-        <ServiceColumn title="Qiita" badge="人気5件" articles={qiita} loading={qiitaLoading} />
-      </div>
-    </section>
-  );
+export function QiitaColumn() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetchQiitaPopular(5).then(setArticles).finally(() => setLoading(false));
+  }, []);
+  return <ServiceColumn title="Qiita" badge="人気5件" articles={articles} loading={loading} />;
 }
