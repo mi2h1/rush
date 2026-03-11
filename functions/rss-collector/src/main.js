@@ -1,5 +1,5 @@
 import { Client, Databases, Query, ID } from 'node-appwrite';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import { XMLParser } from 'fast-xml-parser';
 
 const RSS_FEEDS = [
@@ -78,9 +78,13 @@ function parseRss(xml) {
   }));
 }
 
-async function analyzeWithGemini(gemini, title, description) {
-  const model = gemini.getGenerativeModel({ model: 'gemini-2.0-flash' });
-  const prompt = `以下の記事を分析して、JSONで返してください。
+async function analyzeWithGroq(groq, title, description) {
+  const completion = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [
+      {
+        role: 'user',
+        content: `以下の記事を分析して、JSONで返してください。
 
 タイトル: ${title}
 内容: ${description.slice(0, 500)}
@@ -92,12 +96,13 @@ async function analyzeWithGemini(gemini, title, description) {
   "isHot": true/false（話題性・重要度が高い場合はtrue）
 }
 
-JSONのみを返してください。余分なテキスト不要。`;
-
-  const result = await model.generateContent(prompt);
-  const text = result.response.text().trim();
-  const json = text.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-  return JSON.parse(json);
+JSONのみを返してください。余分なテキスト不要。`,
+      },
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0.3,
+  });
+  return JSON.parse(completion.choices[0].message.content);
 }
 
 async function articleExists(db, url) {
@@ -115,7 +120,7 @@ export default async ({ req, res, log, error }) => {
     .setKey(process.env.APPWRITE_API_KEY);
 
   const db = new Databases(client);
-  const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   let totalNew = 0;
   let totalSkipped = 0;
@@ -147,7 +152,7 @@ export default async ({ req, res, log, error }) => {
 
       let analysis;
       try {
-        analysis = await analyzeWithGemini(gemini, item.title, item.description);
+        analysis = await analyzeWithGroq(groq, item.title, item.description);
       } catch (e) {
         error(`Gemini error for "${item.title}": ${e.message}`);
         analysis = {
