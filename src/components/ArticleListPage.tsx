@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Article } from '../types';
 import { CATEGORIES, SOURCES } from '../types';
-import { fetchArticleList } from '../lib/appwrite';
+import { fetchArticleList } from '../lib/supabase';
 import { GridCard } from './GridCard';
 
 const PER_PAGE = 20;

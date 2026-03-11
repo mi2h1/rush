@@ -1,0 +1,35 @@
+name: RSS Collector
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 毎時0分
+  workflow_dispatch:       # 手動実行も可能
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: functions/rss-collector
+        run: npm install
+
+      - name: Run RSS collector
+        working-directory: functions/rss-collector
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: node -e "
+          import('./src/main.js').then(m => m.default({
+            req: { body: '{}' },
+            res: { json: (v) => console.log(JSON.stringify(v)) },
+            log: console.log,
+            error: console.error,
+          }));
+        "

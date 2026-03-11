@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Article } from '../types';
-import { fetchSourceLatest } from '../lib/appwrite';
+import { fetchSourceLatest } from '../lib/supabase';
 import { fetchQiitaPopular } from '../lib/trending';
 import { ColumnCard } from './CategoryColumns';
 

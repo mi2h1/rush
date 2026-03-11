@@ -1,4 +1,4 @@
-import { Client, Databases, Query, ID } from 'node-appwrite';
+import { createClient } from '@supabase/supabase-js';
 import Groq from 'groq-sdk';
 import { XMLParser } from 'fast-xml-parser';
 
@@ -54,7 +54,6 @@ function extractThumbnail(item) {
   }
   const mt = item['media:thumbnail'];
   if (mt?.['@_url']) return mt['@_url'];
-  // enclosure（Zennはtype="false"という不正値なのでURLがあれば無条件で使う）
   const enc = item.enclosure;
   if (enc?.['@_url']) return enc['@_url'];
   const html = toText(item.description ?? item['content:encoded'] ?? item.content ?? '');
@@ -164,20 +163,18 @@ JSONのみを返してください。余分なテキスト不要。`,
 }
 
 async function articleExists(db, url) {
-  const res = await db.listDocuments('rush-db', 'articles', [
-    Query.equal('url', url),
-    Query.limit(1),
-  ]);
-  return res.total > 0;
+  const { count } = await db
+    .from('articles')
+    .select('id', { count: 'exact', head: true })
+    .eq('url', url);
+  return (count ?? 0) > 0;
 }
 
 export default async ({ req, res, log, error }) => {
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT)
-    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
-    .setKey(process.env.APPWRITE_API_KEY);
-
-  const db = new Databases(client);
+  const db = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   let bodyJson = {};
@@ -186,24 +183,7 @@ export default async ({ req, res, log, error }) => {
   let totalNew = 0;
   let totalSkipped = 0;
 
-  if (bodyJson.fixThumbnails === true) {
-    // サムネイル修正モード: RSS最新分のURLでサムネなし記事を更新
-    log('Fix thumbnails mode');
-    const xml = await fetchRss('https://zenn.dev/topics/ai/feed');
-    const items = parseRss(xml);
-    for (const item of items) {
-      if (!item.url || !item.thumbnailUrl) continue;
-      const res = await db.listDocuments('rush-db', 'articles', [Query.equal('url', item.url), Query.limit(1)]);
-      if (res.total === 0) continue;
-      const doc = res.documents[0];
-      if (doc.thumbnailUrl) { totalSkipped++; continue; }
-      try {
-        await db.updateDocument('rush-db', 'articles', doc.$id, { thumbnailUrl: item.thumbnailUrl });
-        totalNew++;
-        log(`  Updated thumbnail: ${doc.title.slice(0, 50)}`);
-      } catch (e) { error(`Update error: ${e.message}`); }
-    }
-  } else if (backfill) {
+  if (backfill) {
     // バックフィルモード: APIで複数ページ取得、AI処理なし
     log('Backfill mode: fetching historical articles (no AI)');
     const sources = [
@@ -216,23 +196,20 @@ export default async ({ req, res, log, error }) => {
         if (!item.url || !item.title) continue;
         if (await articleExists(db, item.url)) { totalSkipped++; continue; }
         const category = detectCategory(item.title + ' ' + item.description);
-        try {
-          await db.createDocument('rush-db', 'articles', ID.unique(), {
-            title: item.title.slice(0, 500),
-            source,
-            category,
-            url: item.url,
-            publishedAt: new Date(item.publishedAt).toISOString(),
-            summary: item.description.slice(0, 200) || item.title,
-            tags: [],
-            isHot: false,
-            ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
-            ...(item.likeCount != null ? { likeCount: item.likeCount } : {}),
-          });
-          totalNew++;
-        } catch (e) {
-          error(`DB save error: ${e.message}`);
-        }
+        const { error: err } = await db.from('articles').insert({
+          title: item.title.slice(0, 500),
+          source,
+          category,
+          url: item.url,
+          published_at: new Date(item.publishedAt).toISOString(),
+          summary: item.description.slice(0, 200) || item.title,
+          tags: [],
+          is_hot: false,
+          ...(item.thumbnailUrl ? { thumbnail_url: item.thumbnailUrl } : {}),
+          ...(item.likeCount != null ? { like_count: item.likeCount } : {}),
+        });
+        if (err) error(`DB save error: ${err.message}`);
+        else totalNew++;
       }
     }
   } else {
@@ -252,22 +229,19 @@ export default async ({ req, res, log, error }) => {
         const category = detectCategory(fullText);
         const hashtags = (fullText.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
           .map((t) => t.slice(1).slice(0, 50)).slice(0, 5);
-        try {
-          await db.createDocument('rush-db', 'articles', ID.unique(), {
-            title: item.title.slice(0, 500),
-            source: 'X',
-            category,
-            url: item.url,
-            publishedAt: new Date(item.publishedAt).toISOString(),
-            summary: cleanText.slice(0, 2000) || item.title,
-            tags: hashtags,
-            isHot: false,
-            ...(xThumb ? { thumbnailUrl: xThumb } : {}),
-          });
-          totalNew++;
-        } catch (e) {
-          error(`X save error: ${e.message}`);
-        }
+        const { error: err } = await db.from('articles').insert({
+          title: item.title.slice(0, 500),
+          source: 'X',
+          category,
+          url: item.url,
+          published_at: new Date(item.publishedAt).toISOString(),
+          summary: cleanText.slice(0, 2000) || item.title,
+          tags: hashtags,
+          is_hot: false,
+          ...(xThumb ? { thumbnail_url: xThumb } : {}),
+        });
+        if (err) error(`X save error: ${err.message}`);
+        else totalNew++;
       }
     } catch (e) {
       error(`X feed error: ${e.message}`);
@@ -300,26 +274,21 @@ export default async ({ req, res, log, error }) => {
           analysis = { summary: item.description.slice(0, 200) || item.title, tags: [], isHot: false };
         }
 
-        try {
-          await db.createDocument('rush-db', 'articles', ID.unique(), {
-            title: item.title.slice(0, 500),
-            source: feed.source,
-            category,
-            url: item.url,
-            publishedAt: new Date(item.publishedAt).toISOString(),
-            summary: analysis.summary.slice(0, 2000),
-            tags: (analysis.tags ?? []).slice(0, 5).map((t) => String(t).slice(0, 50)),
-            isHot: analysis.isHot ?? false,
-            ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
-          });
-          totalNew++;
-          log(`  Saved: ${item.title.slice(0, 60)}`);
-        } catch (e) {
-          error(`DB save error for "${item.title}": ${e.message}`);
-        }
+        const { error: err } = await db.from('articles').insert({
+          title: item.title.slice(0, 500),
+          source: feed.source,
+          category,
+          url: item.url,
+          published_at: new Date(item.publishedAt).toISOString(),
+          summary: analysis.summary.slice(0, 2000),
+          tags: (analysis.tags ?? []).slice(0, 5).map((t) => String(t).slice(0, 50)),
+          is_hot: analysis.isHot ?? false,
+          ...(item.thumbnailUrl ? { thumbnail_url: item.thumbnailUrl } : {}),
+        });
+        if (err) error(`DB save error for "${item.title}": ${err.message}`);
+        else { totalNew++; log(`  Saved: ${item.title.slice(0, 60)}`); }
       }
     }
-
   }
 
   log(`Done. New: ${totalNew}, Skipped: ${totalSkipped}`);

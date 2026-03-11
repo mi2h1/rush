@@ -4,7 +4,7 @@
   "type": "module",
   "main": "src/main.js",
   "dependencies": {
-    "node-appwrite": "^16.0.0",
+    "@supabase/supabase-js": "^2.49.8",
     "groq-sdk": "^0.15.0",
     "fast-xml-parser": "^4.5.0"
   }

@@ -7,7 +7,7 @@ import { ZennColumn, QiitaColumn } from './components/ServiceColumns';
 import { HotSection } from './components/HotSection';
 import { XTimeline } from './components/XTimeline';
 import { ArticleListPage } from './components/ArticleListPage';
-import { fetchTopArticles, fetchXArticles } from './lib/appwrite';
+import { fetchTopArticles, fetchXArticles } from './lib/supabase';
 import type { Article, PageId } from './types';
 import './App.css';
 
