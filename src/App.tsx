@@ -62,11 +62,19 @@ export default function App() {
             {loading && <div className="state-message">読み込み中...</div>}
             {!loading && (
               <div className="top-layout">
-                <div className="top-hero"><HeroSection articles={heroArticles} /></div>
-                <div className="top-zenn"><ZennColumn /></div>
-                <div className="top-qiita"><QiitaColumn /></div>
-                <div className="top-x"><XTimeline articles={xArticles} loading={xLoading} /></div>
-                <div className="top-hot"><HotSection articles={hotArticles} /></div>
+                <HeroSection articles={heroArticles} />
+                <div className="top-body">
+                  <div className="top-left">
+                    <div className="top-services">
+                      <ZennColumn />
+                      <QiitaColumn />
+                    </div>
+                    <HotSection articles={hotArticles} />
+                  </div>
+                  <div className="top-right">
+                    <XTimeline articles={xArticles} loading={xLoading} />
+                  </div>
+                </div>
               </div>
             )}
           </>
