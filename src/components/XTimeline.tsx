@@ -15,6 +15,9 @@ function XPost({ article }: { article: Article }) {
       className="x-post"
     >
       <p className="x-post-text">{article.summary || article.title}</p>
+      {article.thumbnailUrl && (
+        <img src={article.thumbnailUrl} alt="" className="x-post-image" loading="lazy" />
+      )}
       <div className="x-post-footer">
         {article.tags.slice(0, 3).map((tag) => (
           <span key={tag} className="x-post-tag">#{tag}</span>

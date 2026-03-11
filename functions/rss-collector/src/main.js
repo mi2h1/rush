@@ -14,6 +14,20 @@ const CATEGORY_KEYWORDS = {
   meta: ['meta', 'llama', 'faiss'],
 };
 
+// HTMLエスケープされた文字列を処理してテキストと画像URLを抽出
+function processHtml(raw) {
+  const decoded = raw
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const imgMatch = decoded.match(/<img[^>]+src=["']([^"']+)["']/i);
+  const thumbnailUrl = imgMatch?.[1] ?? null;
+  const text = decoded
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+  return { text, thumbnailUrl };
+}
+
 function toText(val) {
   if (!val) return '';
   if (typeof val === 'string') return val;
@@ -231,9 +245,10 @@ export default async ({ req, res, log, error }) => {
       for (const item of xItems) {
         if (!item.url || !item.title) continue;
         if (await articleExists(db, item.url)) { totalSkipped++; continue; }
-        const text = item.title + ' ' + item.description;
-        const category = detectCategory(text);
-        const hashtags = (text.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
+        const { text: cleanText, thumbnailUrl: xThumb } = processHtml(item.description);
+        const fullText = item.title + ' ' + cleanText;
+        const category = detectCategory(fullText);
+        const hashtags = (fullText.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
           .map((t) => t.slice(1).slice(0, 50)).slice(0, 5);
         try {
           await db.createDocument('rush-db', 'articles', ID.unique(), {
@@ -242,9 +257,10 @@ export default async ({ req, res, log, error }) => {
             category,
             url: item.url,
             publishedAt: new Date(item.publishedAt).toISOString(),
-            summary: item.description.slice(0, 2000) || item.title,
+            summary: cleanText.slice(0, 2000) || item.title,
             tags: hashtags,
             isHot: false,
+            ...(xThumb ? { thumbnailUrl: xThumb } : {}),
           });
           totalNew++;
         } catch (e) {
