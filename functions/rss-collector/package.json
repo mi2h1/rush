@@ -1,0 +1,11 @@
+{
+  "name": "rss-collector",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "node-appwrite": "^16.0.0",
+    "@google/generative-ai": "^0.24.0",
+    "fast-xml-parser": "^4.5.0"
+  }
+}

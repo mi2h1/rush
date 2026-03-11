@@ -255,6 +255,15 @@ a { color: inherit; text-decoration: none; }
   flex-shrink: 0;
 }
 
+/* ── ステート表示 ─────────────────────────────────── */
+.state-message {
+  color: var(--text-muted);
+  padding: 48px 0;
+  text-align: center;
+  font-size: 14px;
+}
+.state-message.error { color: #f85149; }
+
 /* ── レスポンシブ ─────────────────────────────────── */
 @media (max-width: 768px) {
   .lower-grid { grid-template-columns: 1fr; }

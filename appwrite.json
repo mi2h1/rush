@@ -1,0 +1,26 @@
+{
+  "projectId": "rush",
+  "projectName": "Rush",
+  "endpoint": "https://sgp.cloud.appwrite.io/v1",
+  "functions": [
+    {
+      "name": "RSS Collector",
+      "$id": "rss-collector",
+      "path": "functions/rss-collector",
+      "entrypoint": "src/main.js",
+      "commands": "npm install",
+      "runtime": "node-22",
+      "scopes": [],
+      "execute": [],
+      "events": [],
+      "schedule": "0 * * * *",
+      "timeout": 300,
+      "enabled": true,
+      "logging": true,
+      "ignore": [
+        "node_modules",
+        ".npm"
+      ]
+    }
+  ]
+}

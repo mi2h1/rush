@@ -1,0 +1,54 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@google/generative-ai':
+        specifier: ^0.24.0
+        version: 0.24.1
+      fast-xml-parser:
+        specifier: ^4.5.0
+        version: 4.5.4
+      node-appwrite:
+        specifier: ^16.0.0
+        version: 16.0.0
+
+packages:
+
+  '@google/generative-ai@0.24.1':
+    resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
+
+  fast-xml-parser@4.5.4:
+    resolution: {integrity: sha512-jE8ugADnYOBsu1uaoayVl1tVKAMNOXyjwvv2U6udEA2ORBhDooJDWoGxTkhd4Qn4yh59JVVt/pKXtjPwx9OguQ==}
+    hasBin: true
+
+  node-appwrite@16.0.0:
+    resolution: {integrity: sha512-KLC8bNtZ8T2sxiudYNC0V5UwegxE7+FmLo96a5RuSgRRw3B4WSzs3JYy+WG8p+eZJjg1o1JrQeB7ikUc8qZc0Q==}
+
+  node-fetch-native-with-agent@1.7.2:
+    resolution: {integrity: sha512-5MaOOCuJEvcckoz7/tjdx1M6OusOY6Xc5f459IaruGStWnKzlI1qpNgaAwmn4LmFYcsSlj+jBMk84wmmRxfk5g==}
+
+  strnum@1.1.2:
+    resolution: {integrity: sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA==}
+
+snapshots:
+
+  '@google/generative-ai@0.24.1': {}
+
+  fast-xml-parser@4.5.4:
+    dependencies:
+      strnum: 1.1.2
+
+  node-appwrite@16.0.0:
+    dependencies:
+      node-fetch-native-with-agent: 1.7.2
+
+  node-fetch-native-with-agent@1.7.2: {}
+
+  strnum@1.1.2: {}
