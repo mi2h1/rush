@@ -21,3 +21,12 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: 'google', label: 'Google' },
   { id: 'other', label: 'その他' },
 ];
+
+export type PageId = 'top' | 'articles';
+
+export const SOURCES: { id: string; label: string }[] = [
+  { id: 'all', label: 'すべて' },
+  { id: 'Zenn', label: 'Zenn' },
+  { id: 'Qiita', label: 'Qiita' },
+  { id: 'note', label: 'note' },
+];

@@ -1,5 +1,5 @@
 import { Client, Databases, Query } from 'appwrite';
-import type { Article, CategoryId } from '../types';
+import type { Article } from '../types';
 
 const client = new Client()
   .setEndpoint('https://sgp.cloud.appwrite.io/v1')
@@ -10,49 +10,67 @@ const databases = new Databases(client);
 const DB_ID = 'rush-db';
 const COLLECTION_ID = 'articles';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDoc(doc: any): Article {
+  return {
+    id: doc.$id,
+    title: doc.title,
+    source: doc.source,
+    category: doc.category,
+    publishedAt: doc.publishedAt,
+    summary: doc.summary,
+    tags: doc.tags ?? [],
+    url: doc.url,
+    isHot: doc.isHot ?? false,
+    thumbnailUrl: doc.thumbnailUrl ?? undefined,
+  };
+}
+
 export async function fetchXArticles(limit = 30): Promise<Article[]> {
   const res = await databases.listDocuments(DB_ID, COLLECTION_ID, [
     Query.equal('source', 'X'),
     Query.orderDesc('publishedAt'),
     Query.limit(limit),
   ]);
-  return res.documents.map((doc) => ({
-    id: doc.$id,
-    title: doc.title,
-    source: doc.source,
-    category: doc.category,
-    publishedAt: doc.publishedAt,
-    summary: doc.summary,
-    tags: doc.tags ?? [],
-    url: doc.url,
-    isHot: doc.isHot ?? false,
-    thumbnailUrl: doc.thumbnailUrl ?? undefined,
-  }));
+  return res.documents.map(mapDoc);
 }
 
-export async function fetchArticles(category?: CategoryId): Promise<Article[]> {
-  const queries = [
-    Query.orderDesc('publishedAt'),
-    Query.limit(100),
+/** TOPページ用: X除く最新N件 */
+export async function fetchTopArticles(limit = 100): Promise<Article[]> {
+  const res = await databases.listDocuments(DB_ID, COLLECTION_ID, [
     Query.notEqual('source', 'X'),
+    Query.orderDesc('publishedAt'),
+    Query.limit(limit),
+  ]);
+  return res.documents.map(mapDoc);
+}
+
+/** サービス列用: 特定ソースの最新N件 */
+export async function fetchSourceLatest(source: string, limit = 5): Promise<Article[]> {
+  const res = await databases.listDocuments(DB_ID, COLLECTION_ID, [
+    Query.equal('source', source),
+    Query.orderDesc('publishedAt'),
+    Query.limit(limit),
+  ]);
+  return res.documents.map(mapDoc);
+}
+
+/** 記事一覧ページ用: ソース・カテゴリフィルター + ページネーション */
+export async function fetchArticleList(opts: {
+  source?: string;
+  category?: string;
+  page?: number;
+  limit?: number;
+} = {}): Promise<{ articles: Article[]; total: number }> {
+  const { source, category, page = 0, limit = 20 } = opts;
+  const queries = [
+    Query.notEqual('source', 'X'),
+    Query.orderDesc('publishedAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
   ];
-
-  if (category && category !== 'all') {
-    queries.push(Query.equal('category', category));
-  }
-
+  if (source) queries.push(Query.equal('source', source));
+  if (category) queries.push(Query.equal('category', category));
   const res = await databases.listDocuments(DB_ID, COLLECTION_ID, queries);
-
-  return res.documents.map((doc) => ({
-    id: doc.$id,
-    title: doc.title,
-    source: doc.source,
-    category: doc.category,
-    publishedAt: doc.publishedAt,
-    summary: doc.summary,
-    tags: doc.tags ?? [],
-    url: doc.url,
-    isHot: doc.isHot ?? false,
-    thumbnailUrl: doc.thumbnailUrl ?? undefined,
-  }));
+  return { articles: res.documents.map(mapDoc), total: res.total };
 }
