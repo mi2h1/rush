@@ -23,7 +23,16 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: 'other', label: 'その他' },
 ];
 
-export type PageId = 'top' | 'articles';
+export type PageId = 'top' | 'articles' | 'admin';
+
+export interface XUser {
+  id: string;
+  username: string;
+  displayName: string | null;
+  profileImageUrl: string | null;
+  enabled: boolean;
+  createdAt: string;
+}
 
 export const SOURCES: { id: string; label: string }[] = [
   { id: 'all', label: 'すべて' },

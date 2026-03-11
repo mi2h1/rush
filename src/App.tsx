@@ -7,11 +7,13 @@ import { ZennColumn, QiitaColumn } from './components/ServiceColumns';
 import { HotSection } from './components/HotSection';
 import { XTimeline } from './components/XTimeline';
 import { ArticleListPage } from './components/ArticleListPage';
+import { AdminPage } from './components/AdminPage';
 import { fetchTopArticles, fetchXArticles } from './lib/supabase';
 import type { Article, PageId } from './types';
 import './App.css';
 
 function getPageFromUrl(): PageId {
+  if (window.location.pathname.endsWith('/admin')) return 'admin';
   const p = new URLSearchParams(window.location.search).get('p');
   return p === 'articles' ? 'articles' : 'top';
 }
@@ -82,6 +84,7 @@ export default function App() {
         )}
 
         {page === 'articles' && <ArticleListPage />}
+        {page === 'admin' && <AdminPage />}
       </main>
       <Footer />
     </div>
