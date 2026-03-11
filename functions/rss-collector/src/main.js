@@ -238,7 +238,7 @@ export default async ({ req, res, log, error }) => {
   } else {
     // 通常モード: RSSで最新取得 + AI処理
     // X フィード収集（RSSHub経由、AI処理なし）
-    const X_FEED_URL = 'http://210.131.219.93:1200/twitter/keyword/%23claude%20OR%20%23claudecode%20OR%20%23codex%20OR%20%23openai%20OR%20%23chatgpt%20OR%20%23%E7%94%9F%E6%88%90AI%20lang%3Aja%20-is%3Aretweet';
+    const X_FEED_URL = 'http://210.131.219.93:1200/twitter/keyword/%23claude%20OR%20%23claudecode%20OR%20%23codex%20OR%20%23openai%20OR%20%23chatgpt%20OR%20%23%E7%94%9F%E6%88%90AI%20lang%3Aja%20-is%3Aretweet%20-%E3%82%A4%E3%83%A9%E3%82%B9%E3%83%88';
     try {
       log('Fetching X feed via RSSHub...');
       const xml = await fetchRss(X_FEED_URL);
