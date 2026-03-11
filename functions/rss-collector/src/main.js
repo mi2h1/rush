@@ -261,9 +261,6 @@ export default async ({ req, res, log, error }) => {
       }
     }
     log(`X: ${X_USERS.length} accounts processed`);
-    } catch (e) {
-      error(`X feed error: ${e.message}`);
-    }
 
     for (const feed of RSS_FEEDS) {
       log(`Fetching: ${feed.url}`);
