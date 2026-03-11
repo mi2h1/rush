@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ArticleCard } from './components/ArticleCard';
+import { HeroSection } from './components/HeroSection';
+import { CategoryColumns } from './components/CategoryColumns';
+import { HotSection } from './components/HotSection';
 import { fetchArticles } from './lib/appwrite';
 import { isToday } from './lib/time';
 import type { Article, CategoryId } from './types';
@@ -22,15 +25,21 @@ export default function App() {
       .finally(() => setLoading(false));
   }, [activeCategory]);
 
+  // all表示: ヒーロー + カテゴリ列 + 注目
+  const heroArticles = useMemo(() => articles.slice(0, 5), [articles]);
   const hotArticles = useMemo(() => articles.filter((a) => a.isHot), [articles]);
+
+  // カテゴリ絞り込み表示: 今日の話題 + 最新記事
   const todayArticles = useMemo(
-    () => articles.filter((a) => !a.isHot && isToday(a.publishedAt)),
+    () => articles.filter((a) => isToday(a.publishedAt)),
     [articles],
   );
   const recentArticles = useMemo(
-    () => articles.filter((a) => !a.isHot && !isToday(a.publishedAt)),
+    () => articles.filter((a) => !isToday(a.publishedAt)),
     [articles],
   );
+
+  const isAllView = activeCategory === 'all';
 
   return (
     <div className="app">
@@ -45,45 +54,33 @@ export default function App() {
           <div className="state-message">記事がありません</div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && isAllView && (
           <>
-            {hotArticles.length > 0 && (
+            <HeroSection articles={heroArticles} />
+            <CategoryColumns articles={articles} />
+            <HotSection articles={hotArticles} />
+          </>
+        )}
+
+        {!loading && !error && !isAllView && (
+          <div className="lower-grid">
+            {todayArticles.length > 0 && (
               <section className="section">
-                <h2 className="section-title">
-                  <span className="hot-icon">🔥</span> ホットニュース
-                </h2>
-                <div className="hot-grid">
-                  {hotArticles.map((article) => (
-                    <ArticleCard key={article.id} article={article} featured />
-                  ))}
+                <h2 className="section-title">今日の話題</h2>
+                <div className="article-list">
+                  {todayArticles.map((a) => <ArticleCard key={a.id} article={a} />)}
                 </div>
               </section>
             )}
-
-            <div className="lower-grid">
-              {todayArticles.length > 0 && (
-                <section className="section">
-                  <h2 className="section-title">今日の話題</h2>
-                  <div className="article-list">
-                    {todayArticles.map((article) => (
-                      <ArticleCard key={article.id} article={article} />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {recentArticles.length > 0 && (
-                <section className="section">
-                  <h2 className="section-title">最新記事</h2>
-                  <div className="article-list">
-                    {recentArticles.map((article) => (
-                      <ArticleCard key={article.id} article={article} />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </div>
-          </>
+            {recentArticles.length > 0 && (
+              <section className="section">
+                <h2 className="section-title">最新記事</h2>
+                <div className="article-list">
+                  {recentArticles.map((a) => <ArticleCard key={a.id} article={a} />)}
+                </div>
+              </section>
+            )}
+          </div>
         )}
       </main>
     </div>

@@ -34,6 +34,25 @@ function detectCategory(text) {
   return 'other';
 }
 
+function extractThumbnail(item) {
+  // media:content
+  const mc = item['media:content'];
+  if (mc) {
+    const url = Array.isArray(mc) ? mc[0]?.['@_url'] : mc['@_url'];
+    if (url) return url;
+  }
+  // media:thumbnail
+  const mt = item['media:thumbnail'];
+  if (mt?.['@_url']) return mt['@_url'];
+  // enclosure (image type)
+  const enc = item.enclosure;
+  if (enc?.['@_url'] && String(enc?.['@_type'] ?? '').startsWith('image')) return enc['@_url'];
+  // first <img> in HTML description
+  const html = toText(item.description ?? item['content:encoded'] ?? item.content ?? '');
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m?.[1] ?? null;
+}
+
 async function fetchRss(url) {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Rush RSS Collector/1.0' },
@@ -55,6 +74,7 @@ function parseRss(xml) {
     url: toText(item.link?.['@_href'] ?? item.link ?? item.guid),
     publishedAt: toText(item.pubDate ?? item.published ?? item.updated) || new Date().toISOString(),
     description: toText(item.description ?? item.summary ?? item.content ?? item['content:encoded']),
+    thumbnailUrl: extractThumbnail(item),
   }));
 }
 
@@ -147,6 +167,7 @@ export default async ({ req, res, log, error }) => {
           summary: analysis.summary.slice(0, 2000),
           tags: (analysis.tags ?? []).slice(0, 5).map((t) => String(t).slice(0, 50)),
           isHot: analysis.isHot ?? false,
+          ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
         });
         totalNew++;
         log(`  Saved: ${item.title.slice(0, 60)}`);

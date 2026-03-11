@@ -32,5 +32,6 @@ export async function fetchArticles(category?: CategoryId): Promise<Article[]> {
     tags: doc.tags ?? [],
     url: doc.url,
     isHot: doc.isHot ?? false,
+    thumbnailUrl: doc.thumbnailUrl ?? undefined,
   }));
 }
