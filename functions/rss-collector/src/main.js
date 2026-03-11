@@ -162,6 +162,10 @@ JSONのみを返してください。余分なテキスト不要。`,
   return JSON.parse(completion.choices[0].message.content);
 }
 
+function isJapanese(text) {
+  return /[\u3040-\u9fff]/.test(text);
+}
+
 async function articleExists(db, url) {
   const { count } = await db
     .from('articles')
@@ -223,8 +227,9 @@ export default async ({ req, res, log, error }) => {
       log(`  X: ${xItems.length} items found`);
       for (const item of xItems) {
         if (!item.url || !item.title) continue;
-        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
         const { text: cleanText, thumbnailUrl: xThumb } = processHtml(item.description);
+        if (!isJapanese(item.title + ' ' + cleanText)) { totalSkipped++; continue; }
+        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
         const fullText = item.title + ' ' + cleanText;
         const category = detectCategory(fullText);
         const hashtags = (fullText.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
