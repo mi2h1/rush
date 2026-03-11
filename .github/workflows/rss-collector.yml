@@ -25,11 +25,4 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: node -e "
-          import('./src/main.js').then(m => m.default({
-            req: { body: '{}' },
-            res: { json: (v) => console.log(JSON.stringify(v)) },
-            log: console.log,
-            error: console.error,
-          }));
-        "
+        run: node run.js
