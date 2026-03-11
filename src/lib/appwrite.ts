@@ -34,6 +34,7 @@ export async function fetchArticles(category?: CategoryId): Promise<Article[]> {
   const queries = [
     Query.orderDesc('publishedAt'),
     Query.limit(100),
+    Query.notEqual('source', 'X'),
   ];
 
   if (category && category !== 'all') {
