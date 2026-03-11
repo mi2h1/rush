@@ -9,13 +9,14 @@ interface ColumnProps {
   badge: string;
   articles: Article[];
   loading: boolean;
+  colorClass?: string;
 }
 
-function ServiceColumn({ title, badge, articles, loading }: ColumnProps) {
+function ServiceColumn({ title, badge, articles, loading, colorClass }: ColumnProps) {
   return (
     <div className="category-column">
       <div className="service-column-header">
-        <h3 className="column-heading">{title}</h3>
+        <h3 className={`column-heading${colorClass ? ` ${colorClass}` : ''}`}>{title}</h3>
         <span className="column-badge">{badge}</span>
       </div>
       <div className="column-cards">
@@ -37,7 +38,7 @@ export function ZennColumn() {
   useEffect(() => {
     fetchSourceLatest('Zenn', 5).then(setArticles).finally(() => setLoading(false));
   }, []);
-  return <ServiceColumn title="Zenn" badge="最新5件" articles={articles} loading={loading} />;
+  return <ServiceColumn title="Zenn" badge="最新5件" articles={articles} loading={loading} colorClass="col-zenn" />;
 }
 
 export function QiitaColumn() {
@@ -46,5 +47,5 @@ export function QiitaColumn() {
   useEffect(() => {
     fetchQiitaPopular(5).then(setArticles).finally(() => setLoading(false));
   }, []);
-  return <ServiceColumn title="Qiita" badge="人気5件" articles={articles} loading={loading} />;
+  return <ServiceColumn title="Qiita" badge="人気5件" articles={articles} loading={loading} colorClass="col-qiita" />;
 }

@@ -33,22 +33,24 @@ function XPost({ article }: { article: Article }) {
 export function XTimeline({ articles, loading }: Props) {
   const lastFetched = articles[0]?.publishedAt;
   return (
-    <div className="x-timeline">
-      <div className="x-timeline-header">
-        <img src="https://cdn.simpleicons.org/x/e7e9ea" alt="X" width={14} height={14} />
-        <span>タイムライン</span>
-        {lastFetched && (
-          <span className="x-timeline-last-fetched">{formatRelativeTime(lastFetched)}</span>
-        )}
+    <div className="x-timeline-wrapper">
+      <div className="service-column-header">
+        <h3 className="column-heading x-column-heading">
+          <img src="https://cdn.simpleicons.org/x/e7e9ea" alt="X" width={12} height={12} className="x-heading-icon" />
+          タイムライン
+        </h3>
+        {lastFetched && <span className="column-badge">{formatRelativeTime(lastFetched)}</span>}
       </div>
-      <div className="x-timeline-body">
-        {loading && <div className="x-timeline-state">読み込み中...</div>}
-        {!loading && articles.length === 0 && (
-          <div className="x-timeline-state">ポストがありません</div>
-        )}
-        {articles.map((a) => (
-          <XPost key={a.id} article={a} />
-        ))}
+      <div className="x-timeline">
+        <div className="x-timeline-body">
+          {loading && <div className="x-timeline-state">読み込み中...</div>}
+          {!loading && articles.length === 0 && (
+            <div className="x-timeline-state">ポストがありません</div>
+          )}
+          {articles.map((a) => (
+            <XPost key={a.id} article={a} />
+          ))}
+        </div>
       </div>
     </div>
   );
