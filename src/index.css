@@ -297,9 +297,15 @@ a { color: inherit; text-decoration: none; }
 /* ── ヒーローセクション ───────────────────────────── */
 .hero-grid {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr 300px;
   gap: 16px;
   align-items: start;
+}
+.hero-articles { display: flex; flex-direction: column; gap: 12px; }
+.hero-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 .hero-main-card {
   display: flex; flex-direction: column; gap: 14px;
@@ -315,6 +321,41 @@ a { color: inherit; text-decoration: none; }
 .hero-main-card:hover .hero-main-title { color: var(--accent); }
 .hero-main-summary { font-size: 13px; color: var(--text-muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hero-main-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+
+/* X タイムライン */
+.x-timeline {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+.x-timeline-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  font-size: 13px; font-weight: 700; color: var(--text);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.x-timeline-body { overflow-y: auto; flex: 1; }
+.x-timeline-state { padding: 20px; text-align: center; font-size: 13px; color: var(--text-muted); }
+.x-post {
+  display: block;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  transition: background 0.15s;
+}
+.x-post:hover { background: var(--surface-hover); }
+.x-post-text {
+  font-size: 13px; color: var(--text); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.x-post:hover .x-post-text { color: var(--accent); }
+.x-post-footer { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.x-post-tag { font-size: 11px; color: var(--accent); opacity: 0.8; }
 
 .hero-side-list { display: flex; flex-direction: column; gap: 10px; }
 .hero-side-card {
@@ -377,6 +418,8 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 1024px) {
   .category-columns { grid-template-columns: repeat(2, 1fr); }
   .hero-grid { grid-template-columns: 1fr; }
+  .hero-bottom-grid { grid-template-columns: repeat(2, 1fr); }
+  .x-timeline { max-height: 400px; }
   .hero-side-list { display: grid; grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {

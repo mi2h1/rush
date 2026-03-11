@@ -5,7 +5,7 @@ import { ArticleCard } from './components/ArticleCard';
 import { HeroSection } from './components/HeroSection';
 import { CategoryColumns } from './components/CategoryColumns';
 import { HotSection } from './components/HotSection';
-import { fetchArticles } from './lib/appwrite';
+import { fetchArticles, fetchXArticles } from './lib/appwrite';
 import { isToday } from './lib/time';
 import type { Article, CategoryId } from './types';
 import './App.css';
@@ -15,6 +15,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<CategoryId>('all');
+  const [xArticles, setXArticles] = useState<Article[]>([]);
+  const [xLoading, setXLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -24,6 +26,14 @@ export default function App() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [activeCategory]);
+
+  useEffect(() => {
+    setXLoading(true);
+    fetchXArticles(30)
+      .then(setXArticles)
+      .catch(() => setXArticles([]))
+      .finally(() => setXLoading(false));
+  }, []);
 
   // all表示: ヒーロー + カテゴリ列 + 注目
   const heroArticles = useMemo(() => articles.slice(0, 5), [articles]);
@@ -56,7 +66,7 @@ export default function App() {
 
         {!loading && !error && isAllView && (
           <>
-            <HeroSection articles={heroArticles} />
+            <HeroSection articles={heroArticles} xArticles={xArticles} xLoading={xLoading} />
             <CategoryColumns articles={articles} />
             <HotSection articles={hotArticles} />
           </>

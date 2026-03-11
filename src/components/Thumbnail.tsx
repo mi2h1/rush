@@ -2,12 +2,14 @@ const SOURCE_ICON: Record<string, string> = {
   Zenn:  'https://cdn.simpleicons.org/zenn/3ea8ff',
   Qiita: 'https://cdn.simpleicons.org/qiita/55c500',
   note:  'https://cdn.simpleicons.org/note/41c9b4',
+  X:     'https://cdn.simpleicons.org/x/e7e9ea',
 };
 
 const SOURCE_COLOR: Record<string, string> = {
   Zenn:  '#3ea8ff',
   Qiita: '#55c500',
   note:  '#41c9b4',
+  X:     '#e7e9ea',
 };
 
 interface Props {

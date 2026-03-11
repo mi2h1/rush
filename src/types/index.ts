@@ -1,5 +1,5 @@
 export type CategoryId = 'all' | 'openai' | 'anthropic' | 'google' | 'meta' | 'other';
-export type Source = 'Zenn' | 'note' | 'Qiita';
+export type Source = 'Zenn' | 'note' | 'Qiita' | 'X';
 
 export interface Article {
   id: string;

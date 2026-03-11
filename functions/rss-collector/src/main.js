@@ -40,8 +40,9 @@ function extractThumbnail(item) {
   }
   const mt = item['media:thumbnail'];
   if (mt?.['@_url']) return mt['@_url'];
+  // enclosure（Zennはtype="false"という不正値なのでURLがあれば無条件で使う）
   const enc = item.enclosure;
-  if (enc?.['@_url'] && String(enc?.['@_type'] ?? '').startsWith('image')) return enc['@_url'];
+  if (enc?.['@_url']) return enc['@_url'];
   const html = toText(item.description ?? item['content:encoded'] ?? item.content ?? '');
   const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
   return m?.[1] ?? null;
@@ -170,7 +171,24 @@ export default async ({ req, res, log, error }) => {
   let totalNew = 0;
   let totalSkipped = 0;
 
-  if (backfill) {
+  if (bodyJson.fixThumbnails === true) {
+    // サムネイル修正モード: RSS最新分のURLでサムネなし記事を更新
+    log('Fix thumbnails mode');
+    const xml = await fetchRss('https://zenn.dev/topics/ai/feed');
+    const items = parseRss(xml);
+    for (const item of items) {
+      if (!item.url || !item.thumbnailUrl) continue;
+      const res = await db.listDocuments('rush-db', 'articles', [Query.equal('url', item.url), Query.limit(1)]);
+      if (res.total === 0) continue;
+      const doc = res.documents[0];
+      if (doc.thumbnailUrl) { totalSkipped++; continue; }
+      try {
+        await db.updateDocument('rush-db', 'articles', doc.$id, { thumbnailUrl: item.thumbnailUrl });
+        totalNew++;
+        log(`  Updated thumbnail: ${doc.title.slice(0, 50)}`);
+      } catch (e) { error(`Update error: ${e.message}`); }
+    }
+  } else if (backfill) {
     // バックフィルモード: APIで複数ページ取得、AI処理なし
     log('Backfill mode: fetching historical articles (no AI)');
     const sources = [
@@ -203,6 +221,40 @@ export default async ({ req, res, log, error }) => {
     }
   } else {
     // 通常モード: RSSで最新取得 + AI処理
+    // X フィード収集（RSSHub経由、AI処理なし）
+    const X_FEED_URL = 'http://210.131.219.93:1200/twitter/keyword/%23claude%20OR%20%23claudecode%20OR%20%23codex%20OR%20%23openai%20OR%20%23chatgpt%20OR%20%23%E7%94%9F%E6%88%90AI%20lang%3Aja%20-is%3Aretweet';
+    try {
+      log('Fetching X feed via RSSHub...');
+      const xml = await fetchRss(X_FEED_URL);
+      const xItems = parseRss(xml);
+      log(`  X: ${xItems.length} items found`);
+      for (const item of xItems) {
+        if (!item.url || !item.title) continue;
+        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
+        const text = item.title + ' ' + item.description;
+        const category = detectCategory(text);
+        const hashtags = (text.match(/#[\w\u3040-\u9fff\u30a0-\u30ff]+/g) ?? [])
+          .map((t) => t.slice(1).slice(0, 50)).slice(0, 5);
+        try {
+          await db.createDocument('rush-db', 'articles', ID.unique(), {
+            title: item.title.slice(0, 500),
+            source: 'X',
+            category,
+            url: item.url,
+            publishedAt: new Date(item.publishedAt).toISOString(),
+            summary: item.description.slice(0, 2000) || item.title,
+            tags: hashtags,
+            isHot: false,
+          });
+          totalNew++;
+        } catch (e) {
+          error(`X save error: ${e.message}`);
+        }
+      }
+    } catch (e) {
+      error(`X feed error: ${e.message}`);
+    }
+
     for (const feed of RSS_FEEDS) {
       log(`Fetching: ${feed.url}`);
       let items;
