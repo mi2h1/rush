@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { PageNav } from './components/PageNav';
 import { HeroSection } from './components/HeroSection';
 import { ZennColumn, QiitaColumn } from './components/ServiceColumns';
@@ -82,6 +83,7 @@ export default function App() {
 
         {page === 'articles' && <ArticleListPage />}
       </main>
+      <Footer />
     </div>
   );
 }

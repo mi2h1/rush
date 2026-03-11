@@ -309,7 +309,7 @@ a { color: inherit; text-decoration: none; }
 }
 .top-left { display: flex; flex-direction: column; gap: 12px; }
 .top-services { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.top-right { display: flex; flex-direction: column; }
+.top-right { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 
 /* ── ヒーローセクション ───────────────────────────── */
 .hero-bottom-grid {
@@ -342,6 +342,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
 }
 .x-timeline-header {
   display: flex; align-items: center; gap: 8px;
@@ -490,6 +491,26 @@ a { color: inherit; text-decoration: none; }
   font-size: 14px;
 }
 .state-message.error { color: #f85149; }
+
+/* ── フッター ─────────────────────────────────────── */
+.footer {
+  margin-top: 48px;
+  border-top: 1px solid var(--border);
+  padding: 20px 0;
+}
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.footer-logo { font-weight: 700; font-size: 13px; color: var(--text); }
+.footer-desc { flex: 1; }
+.footer-copy { flex-shrink: 0; }
 
 /* ── レスポンシブ ─────────────────────────────────── */
 @media (max-width: 1024px) {
