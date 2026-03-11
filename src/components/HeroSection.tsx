@@ -7,6 +7,12 @@ const CATEGORY_LABEL: Record<string, string> = {
   meta: 'Meta', other: 'その他',
 };
 
+const SOURCE_ICON: Record<string, string> = {
+  Zenn: 'https://cdn.simpleicons.org/zenn/3ea8ff',
+  Qiita: 'https://cdn.simpleicons.org/qiita/55c500',
+  note: 'https://cdn.simpleicons.org/note/41c9b4',
+};
+
 interface Props {
   articles: Article[];
 }
@@ -17,12 +23,16 @@ function HeroMainCard({ article }: { article: Article }) {
       <Thumbnail url={article.thumbnailUrl} category={article.category} size="large" />
       <div className="hero-main-body">
         <div className="card-header">
-          <span className={`source-badge ${article.source.toLowerCase()}`}>{article.source}</span>
           <span className={`category-badge cat-${article.category}`}>{CATEGORY_LABEL[article.category]}</span>
         </div>
         <h2 className="hero-main-title">{article.title}</h2>
         <p className="hero-main-summary">{article.summary}</p>
-        <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>
+        <div className="hero-main-footer">
+          <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>
+          {SOURCE_ICON[article.source] && (
+            <img src={SOURCE_ICON[article.source]} alt={article.source} className="source-icon" />
+          )}
+        </div>
       </div>
     </a>
   );
@@ -37,6 +47,9 @@ function HeroSideCard({ article }: { article: Article }) {
         <p className="hero-side-title">{article.title}</p>
         <span className="card-time">{formatRelativeTime(article.publishedAt)}</span>
       </div>
+      {SOURCE_ICON[article.source] && (
+        <img src={SOURCE_ICON[article.source]} alt={article.source} className="source-icon" style={{ position: 'absolute', bottom: '8px', right: '8px' }} />
+      )}
     </a>
   );
 }
