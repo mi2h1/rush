@@ -3,7 +3,7 @@ import Groq from 'groq-sdk';
 import { XMLParser } from 'fast-xml-parser';
 
 const RSS_FEEDS = [
-  { url: 'https://zenn.dev/topics/ai/feed', source: 'Zenn' },
+  { url: 'https://zenn.dev/topics/%E7%94%9F%E6%88%90ai/feed', source: 'Zenn' },
   { url: 'https://qiita.com/tags/ai/feed', source: 'Qiita' },
 ];
 
@@ -86,7 +86,7 @@ function parseRss(xml) {
   }));
 }
 
-// Zenn API でページネーション取得
+// Zenn API でページネーション取得（バックフィル用）
 async function fetchZennArticles(pages = 5) {
   const items = [];
   for (let page = 1; page <= pages; page++) {
@@ -106,53 +106,6 @@ async function fetchZennArticles(pages = 5) {
         description: a.title ?? '',
         thumbnailUrl: a.og_image_url ?? null,
         likeCount: a.liked_count ?? 0,
-      });
-    }
-  }
-  return items;
-}
-
-// Zenn 週間人気取得（likeCount更新用）
-async function fetchZennWeekly(count = 20) {
-  const res = await fetch(
-    `https://zenn.dev/api/articles?topic_slug=ai&order=weekly&count=${count}`,
-    { headers: { 'User-Agent': 'Rush RSS Collector/1.0' }, signal: AbortSignal.timeout(10000) }
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.articles ?? []).map((a) => ({
-    url: `https://zenn.dev${a.path}`,
-    likeCount: a.liked_count ?? 0,
-  }));
-}
-
-// note API でページネーション取得
-async function fetchNoteArticles(pages = 3) {
-  const items = [];
-  for (let page = 0; page < pages; page++) {
-    const res = await fetch(
-      `https://note.com/api/v3/searches?context=note&q=%E7%94%9F%E6%88%90AI&size=20&start=${page * 20}&sort=new&paid_only=false`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; RushBot/1.0)',
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(10000),
-      }
-    );
-    if (!res.ok) break;
-    const data = await res.json();
-    // data.notes はオブジェクト、その中の contents が配列
-    const notes = data?.data?.notes?.contents ?? [];
-    if (notes.length === 0) break;
-    for (const n of notes) {
-      const urlname = n.user?.urlname ?? '';
-      items.push({
-        title: n.name ?? '',
-        url: urlname ? `https://note.com/${urlname}/n/${n.key}` : `https://note.com/n/${n.key}`,
-        publishedAt: n.publish_at ?? new Date().toISOString(),
-        description: n.name ?? '',
-        thumbnailUrl: n.eyecatch ?? null,
       });
     }
   }
@@ -256,7 +209,6 @@ export default async ({ req, res, log, error }) => {
     const sources = [
       { items: await fetchZennArticles(5), source: 'Zenn' },
       { items: await fetchQiitaArticles(5), source: 'Qiita' },
-      { items: await fetchNoteArticles(3), source: 'note' },
     ];
     for (const { items, source } of sources) {
       log(`${source}: ${items.length} items fetched`);
@@ -321,49 +273,6 @@ export default async ({ req, res, log, error }) => {
       error(`X feed error: ${e.message}`);
     }
 
-    // note API 収集（AI処理なし）インライン
-    try {
-      log('Fetching note articles...');
-      const noteRes = await fetch(
-        'http://210.131.219.93:3001/note',
-        { headers: { 'User-Agent': 'Rush RSS Collector/1.0' }, signal: AbortSignal.timeout(10000) }
-      );
-      log(`  note API status: ${noteRes.status}`);
-      const noteData = noteRes.ok ? await noteRes.json() : null;
-      const noteItems = noteData?.data?.notes?.contents ?? [];
-      log(`  note: ${noteItems.length} items found`);
-      for (const item of noteItems) {
-        item.url = item.user?.urlname ? `https://note.com/${item.user.urlname}/n/${item.key}` : `https://note.com/n/${item.key}`;
-        item.title = item.name ?? '';
-        item.publishedAt = item.publish_at ?? new Date().toISOString();
-        item.description = item.name ?? '';
-        item.thumbnailUrl = item.eyecatch ?? null;
-      }
-      for (const item of noteItems) {
-        if (!item.url || !item.title) continue;
-        if (await articleExists(db, item.url)) { totalSkipped++; continue; }
-        const category = detectCategory(item.title + ' ' + item.description);
-        try {
-          await db.createDocument('rush-db', 'articles', ID.unique(), {
-            title: item.title.slice(0, 500),
-            source: 'note',
-            category,
-            url: item.url,
-            publishedAt: new Date(item.publishedAt).toISOString(),
-            summary: item.description.slice(0, 200) || item.title,
-            tags: [],
-            isHot: false,
-            ...(item.thumbnailUrl ? { thumbnailUrl: item.thumbnailUrl } : {}),
-          });
-          totalNew++;
-        } catch (e) {
-          error(`note save error: ${e.message}`);
-        }
-      }
-    } catch (e) {
-      error(`note fetch error: ${e.message}`);
-    }
-
     for (const feed of RSS_FEEDS) {
       log(`Fetching: ${feed.url}`);
       let items;
@@ -411,21 +320,6 @@ export default async ({ req, res, log, error }) => {
       }
     }
 
-    // Zenn週間人気のlikeCountを更新
-    try {
-      log('Updating Zenn weekly likeCount...');
-      const weeklyItems = await fetchZennWeekly(20);
-      let updated = 0;
-      for (const item of weeklyItems) {
-        const found = await db.listDocuments('rush-db', 'articles', [Query.equal('url', item.url), Query.limit(1)]);
-        if (found.total === 0) continue;
-        await db.updateDocument('rush-db', 'articles', found.documents[0].$id, { likeCount: item.likeCount });
-        updated++;
-      }
-      log(`  Updated likeCount for ${updated} Zenn articles`);
-    } catch (e) {
-      error(`Zenn likeCount update error: ${e.message}`);
-    }
   }
 
   log(`Done. New: ${totalNew}, Skipped: ${totalSkipped}`);
