@@ -18,7 +18,7 @@ interface Props {
   articles: Article[];
 }
 
-function ColumnCard({ article }: { article: Article }) {
+export function ColumnCard({ article }: { article: Article }) {
   return (
     <a href={article.url} target="_blank" rel="noopener noreferrer" className="column-card">
       <Thumbnail url={article.thumbnailUrl} category={article.category} source={article.source} size="small" />

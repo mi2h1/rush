@@ -3,7 +3,7 @@ import { Header } from './components/Header';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ArticleCard } from './components/ArticleCard';
 import { HeroSection } from './components/HeroSection';
-import { CategoryColumns } from './components/CategoryColumns';
+import { CategoryColumns, ColumnCard } from './components/CategoryColumns';
 import { HotSection } from './components/HotSection';
 import { fetchArticles, fetchXArticles } from './lib/appwrite';
 import { XTimeline } from './components/XTimeline';
@@ -51,6 +51,7 @@ export default function App() {
   );
 
   const isAllView = activeCategory === 'all';
+  const isOtherView = activeCategory === 'other';
 
   return (
     <div className="app">
@@ -76,7 +77,16 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !error && !isAllView && (
+        {!loading && !error && !isAllView && isOtherView && (
+          <section className="section">
+            <h2 className="section-title">その他</h2>
+            <div className="other-grid">
+              {articles.map((a) => <ColumnCard key={a.id} article={a} />)}
+            </div>
+          </section>
+        )}
+
+        {!loading && !error && !isAllView && !isOtherView && (
           <div className="lower-grid">
             {todayArticles.length > 0 && (
               <section className="section">

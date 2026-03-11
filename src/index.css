@@ -149,6 +149,11 @@ a { color: inherit; text-decoration: none; }
   gap: 32px;
   align-items: start;
 }
+.other-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
 .article-list { display: flex; flex-direction: column; gap: 12px; }
 
 /* ── 記事カード ───────────────────────────────────── */
@@ -438,6 +443,7 @@ a { color: inherit; text-decoration: none; }
 }
 @media (max-width: 768px) {
   .lower-grid { grid-template-columns: 1fr; }
+  .other-grid { grid-template-columns: repeat(2, 1fr); }
   .hot-grid   { grid-template-columns: 1fr; }
   .category-columns { grid-template-columns: 1fr 1fr; }
   .logo-tagline { display: none; }
