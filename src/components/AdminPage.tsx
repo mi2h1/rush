@@ -157,6 +157,19 @@ function AdminDashboard() {
         <button onClick={() => signOut()} className="admin-btn admin-btn-ghost">ログアウト</button>
       </div>
 
+      <form onSubmit={handleAdd} className="admin-add-form">
+        <input
+          value={newUsername}
+          onChange={(e) => setNewUsername(e.target.value)}
+          placeholder="@username"
+          className="admin-input"
+        />
+        <button type="submit" className="admin-btn admin-btn-primary" disabled={adding}>
+          {adding ? '追加中...' : '追加'}
+        </button>
+        {addError && <p className="admin-error">{addError}</p>}
+      </form>
+
       <div className="admin-card">
         <table className="admin-table">
           <thead>
@@ -183,19 +196,6 @@ function AdminDashboard() {
           </tbody>
         </table>
       </div>
-
-      <form onSubmit={handleAdd} className="admin-add-form">
-        <input
-          value={newUsername}
-          onChange={(e) => setNewUsername(e.target.value)}
-          placeholder="@username"
-          className="admin-input"
-        />
-        <button type="submit" className="admin-btn admin-btn-primary" disabled={adding}>
-          {adding ? '追加中...' : '追加'}
-        </button>
-        {addError && <p className="admin-error">{addError}</p>}
-      </form>
     </div>
   );
 }

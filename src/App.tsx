@@ -10,7 +10,7 @@ import { ArticleListPage } from './components/ArticleListPage';
 import { AdminPage } from './components/AdminPage';
 import { BookmarksPage } from './components/BookmarksPage';
 import { AuthProvider } from './context/AuthContext';
-import { fetchTopArticles, fetchXArticles } from './lib/supabase';
+import { fetchTopArticles, fetchXArticles, fetchXUsers } from './lib/supabase';
 import type { Article, PageId } from './types';
 import './App.css';
 
@@ -30,6 +30,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [xArticles, setXArticles] = useState<Article[]>([]);
   const [xLoading, setXLoading] = useState(true);
+  const [xDisplayNames, setXDisplayNames] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const onPop = () => setPage(getPageFromUrl());
@@ -51,8 +52,11 @@ export default function App() {
 
   useEffect(() => {
     setXLoading(true);
-    fetchXArticles(30)
-      .then(setXArticles)
+    Promise.all([fetchXArticles(30), fetchXUsers()])
+      .then(([articles, users]) => {
+        setXArticles(articles);
+        setXDisplayNames(new Map(users.filter(u => u.displayName).map(u => [u.username, u.displayName!])));
+      })
       .catch(() => setXArticles([]))
       .finally(() => setXLoading(false));
   }, []);
@@ -82,7 +86,7 @@ export default function App() {
                       <HotSection articles={hotArticles} />
                     </div>
                     <div className="top-right">
-                      <XTimeline articles={xArticles} loading={xLoading} />
+                      <XTimeline articles={xArticles} loading={xLoading} displayNames={xDisplayNames} />
                     </div>
                   </div>
                 </div>

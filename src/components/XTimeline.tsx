@@ -4,11 +4,13 @@ import { formatRelativeTime } from '../lib/time';
 interface Props {
   articles: Article[];
   loading?: boolean;
+  displayNames?: Map<string, string>;
 }
 
-function XPost({ article }: { article: Article }) {
+function XPost({ article, displayNames }: { article: Article; displayNames?: Map<string, string> }) {
   const username = article.authorUsername
     ?? article.url.match(/x\.com\/([^/]+)\/status/)?.[1];
+  const displayName = username ? displayNames?.get(username) : undefined;
   return (
     <a
       href={article.url}
@@ -18,6 +20,7 @@ function XPost({ article }: { article: Article }) {
     >
       {username && (
         <div className="x-post-author">
+          {displayName && <span className="x-post-author-display">{displayName}</span>}
           <span className="x-post-author-name">@{username}</span>
         </div>
       )}
@@ -37,7 +40,7 @@ function XPost({ article }: { article: Article }) {
   );
 }
 
-export function XTimeline({ articles, loading }: Props) {
+export function XTimeline({ articles, loading, displayNames }: Props) {
   const lastFetched = articles[0]?.publishedAt;
   return (
     <div className="x-timeline-wrapper">
@@ -55,7 +58,7 @@ export function XTimeline({ articles, loading }: Props) {
             <div className="x-timeline-state">ポストがありません</div>
           )}
           {articles.map((a) => (
-            <XPost key={a.id} article={a} />
+            <XPost key={a.id} article={a} displayNames={displayNames} />
           ))}
         </div>
       </div>
