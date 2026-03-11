@@ -1,7 +1,13 @@
-# Commands
-- `pnpm dev` : 開発サーバー起動
+# Environment
+- **実行環境:** VPS（CUIのみ、ブラウザなし）
+- **動作確認:** `pnpm dev` / `pnpm build` / `pnpm preview` は **実行しない**
+  - コード修正 → git push → GitHub Actions デプロイ → ブラウザで確認、が唯一の確認手段
+  - ビルドエラーの確認が必要な場合のみ `pnpm build` を実行してよい
+
+# Commands（参考）
+- `pnpm dev` : 開発サーバー起動（VPS環境では使用不可）
 - `pnpm build` : ビルド（GitHub Pages 向け）
-- `pnpm preview` : ビルド結果のプレビュー
+- `pnpm preview` : ビルド結果のプレビュー（VPS環境では使用不可）
 
 # Project Goal
 - **目的:** 日本語AI情報に特化したニュースアグリゲーター（個人用ダッシュボード）
