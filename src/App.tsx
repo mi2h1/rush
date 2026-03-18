@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Layout } from './components/Layout';
 import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { PageNav } from './components/PageNav';
+import { Sidebar } from './components/Sidebar';
 import { HeroSection } from './components/HeroSection';
 import { ZennColumn, QiitaColumn } from './components/ServiceColumns';
 import { HotSection } from './components/HotSection';
@@ -11,6 +11,7 @@ import { AdminPage } from './components/AdminPage';
 import { BookmarksPage } from './components/BookmarksPage';
 import { AuthProvider } from './context/AuthContext';
 import { fetchTopArticles, fetchXArticles, fetchXUsers } from './lib/supabase';
+import { formatRelativeTime } from './lib/time';
 import type { Article, PageId } from './types';
 import './App.css';
 
@@ -31,12 +32,17 @@ export default function App() {
   const [xArticles, setXArticles] = useState<Article[]>([]);
   const [xLoading, setXLoading] = useState(true);
   const [xDisplayNames, setXDisplayNames] = useState<Map<string, string>>(new Map());
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     const onPop = () => setPage(getPageFromUrl());
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   const handlePageChange = useCallback((p: PageId) => {
     setPage(p);
@@ -53,8 +59,8 @@ export default function App() {
   useEffect(() => {
     setXLoading(true);
     Promise.all([fetchXArticles(30), fetchXUsers()])
-      .then(([articles, users]) => {
-        setXArticles(articles);
+      .then(([fetched, users]) => {
+        setXArticles(fetched);
         setXDisplayNames(new Map(users.filter(u => u.displayName).map(u => [u.username, u.displayName!])));
       })
       .catch(() => setXArticles([]))
@@ -63,19 +69,32 @@ export default function App() {
 
   const heroArticles = useMemo(() => articles.slice(0, 5), [articles]);
   const hotArticles = useMemo(() => articles.filter((a) => a.isHot), [articles]);
+  const lastUpdated = articles[0]?.publishedAt
+    ? formatRelativeTime(articles[0].publishedAt)
+    : undefined;
 
   return (
     <AuthProvider>
-      <div className="app">
-        <Header onNavigate={handlePageChange} />
-        <PageNav active={page} onChange={handlePageChange} />
-
-        <main className="main-content">
+      <Layout
+        header={
+          <Header
+            darkMode={darkMode}
+            onToggleDark={() => setDarkMode(d => !d)}
+            lastUpdated={lastUpdated}
+          />
+        }
+        sidebar={
+          <Sidebar active={page} onNavigate={handlePageChange} />
+        }
+      >
+        <div className="px-8 py-6 max-w-7xl mx-auto">
           {page === 'top' && (
             <>
-              {loading && <div className="state-message">読み込み中...</div>}
+              {loading && (
+                <div className="text-center py-16 text-slate-500 text-base">読み込み中...</div>
+              )}
               {!loading && (
-                <div className="top-layout">
+                <div className="flex flex-col gap-8">
                   <HeroSection articles={heroArticles} />
                   <div className="top-body">
                     <div className="top-left">
@@ -97,9 +116,8 @@ export default function App() {
           {page === 'articles' && <ArticleListPage />}
           {page === 'bookmarks' && <BookmarksPage />}
           {page === 'admin' && <AdminPage />}
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </Layout>
     </AuthProvider>
   );
 }
