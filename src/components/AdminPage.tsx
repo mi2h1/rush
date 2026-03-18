@@ -5,6 +5,12 @@ import {
   fetchXUsers, addXUser, updateXUser, deleteXUser,
 } from '../lib/supabase';
 
+const inputCls = 'w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-colors';
+const btnPrimary = 'h-10 px-4 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors';
+const btnGhost = 'h-9 px-3 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-gray-50 transition-colors';
+const btnSm = 'h-7 px-2.5 rounded-md border border-slate-200 text-xs text-slate-600 hover:bg-gray-50 transition-colors';
+const btnDanger = 'h-7 px-2.5 rounded-md border border-red-200 text-xs text-red-600 hover:bg-red-50 transition-colors';
+
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,30 +27,32 @@ function LoginForm() {
   };
 
   return (
-    <div className="admin-login">
-      <h2 className="admin-login-title">管理画面</h2>
-      <form onSubmit={handleSubmit} className="admin-login-form">
-        <input
-          type="email"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="admin-input"
-          required
-        />
-        <input
-          type="password"
-          placeholder="パスワード"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="admin-input"
-          required
-        />
-        {error && <p className="admin-error">{error}</p>}
-        <button type="submit" className="admin-btn admin-btn-primary" disabled={loading}>
-          {loading ? 'ログイン中...' : 'ログイン'}
-        </button>
-      </form>
+    <div className="max-w-sm mx-auto mt-16">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+        <h2 className="text-lg font-semibold text-slate-900 mb-6 text-center">管理画面</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputCls}
+            required
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={inputCls}
+            required
+          />
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <button type="submit" className={`${btnPrimary} w-full mt-1`} disabled={loading}>
+            {loading ? 'ログイン中...' : 'ログイン'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -64,40 +72,47 @@ function UserRow({ user, onToggle, onDelete, onNameUpdate }: {
   };
 
   return (
-    <tr className={`admin-user-row ${!user.enabled ? 'admin-user-disabled' : ''}`}>
-      <td className="admin-td">
-        <span className="admin-username">@{user.username}</span>
+    <tr className={`border-t border-slate-100 ${!user.enabled ? 'opacity-50' : ''}`}>
+      <td className="px-4 py-3 text-sm text-slate-700">
+        <span className="font-mono">@{user.username}</span>
       </td>
-      <td className="admin-td">
+      <td className="px-4 py-3 text-sm">
         {editing ? (
-          <div className="admin-name-edit">
+          <div className="flex items-center gap-2">
             <input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="admin-input admin-input-sm"
+              className="px-2 py-1 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 w-40"
               onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
               autoFocus
             />
-            <button onClick={handleNameSave} className="admin-btn admin-btn-sm">保存</button>
-            <button onClick={() => setEditing(false)} className="admin-btn admin-btn-sm admin-btn-ghost">×</button>
+            <button onClick={handleNameSave} className={btnSm}>保存</button>
+            <button onClick={() => setEditing(false)} className={btnSm}>×</button>
           </div>
         ) : (
-          <span className="admin-display-name" onClick={() => setEditing(true)}>
-            {user.displayName || <span className="admin-placeholder">クリックして入力</span>}
+          <span
+            className="cursor-pointer text-slate-700 hover:text-primary-600"
+            onClick={() => setEditing(true)}
+          >
+            {user.displayName || <span className="text-slate-400 text-xs">クリックして入力</span>}
           </span>
         )}
       </td>
-      <td className="admin-td admin-td-center">
+      <td className="px-4 py-3 text-center">
         <button
-          className={`admin-toggle ${user.enabled ? 'admin-toggle-on' : 'admin-toggle-off'}`}
+          className={`h-7 px-3 rounded-full text-xs font-medium border transition-colors ${
+            user.enabled
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+              : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+          }`}
           onClick={() => onToggle(user.id, !user.enabled)}
         >
           {user.enabled ? '有効' : '無効'}
         </button>
       </td>
-      <td className="admin-td admin-td-center">
+      <td className="px-4 py-3 text-center">
         <button
-          className="admin-btn admin-btn-danger admin-btn-sm"
+          className={btnDanger}
           onClick={() => confirm(`@${user.username} を削除しますか？`) && onDelete(user.id)}
         >
           削除
@@ -151,38 +166,40 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-header">
-        <h2 className="admin-title">X ユーザー管理</h2>
-        <button onClick={() => signOut()} className="admin-btn admin-btn-ghost">ログアウト</button>
+    <div className="max-w-3xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-base font-semibold text-slate-900">X ユーザー管理</h2>
+        <button onClick={() => signOut()} className={btnGhost}>ログアウト</button>
       </div>
 
-      <form onSubmit={handleAdd} className="admin-add-form">
-        <input
-          value={newUsername}
-          onChange={(e) => setNewUsername(e.target.value)}
-          placeholder="@username"
-          className="admin-input"
-        />
-        <button type="submit" className="admin-btn admin-btn-primary" disabled={adding}>
+      <form onSubmit={handleAdd} className="flex items-start gap-3 mb-6">
+        <div className="flex-1">
+          <input
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+            placeholder="@username"
+            className={inputCls}
+          />
+          {addError && <p className="mt-1 text-xs text-red-600">{addError}</p>}
+        </div>
+        <button type="submit" className={btnPrimary} disabled={adding}>
           {adding ? '追加中...' : '追加'}
         </button>
-        {addError && <p className="admin-error">{addError}</p>}
       </form>
 
-      <div className="admin-card">
-        <table className="admin-table">
-          <thead>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 border-b border-slate-200">
             <tr>
-              <th className="admin-th">ユーザー名</th>
-              <th className="admin-th">表示名</th>
-              <th className="admin-th admin-td-center">状態</th>
-              <th className="admin-th admin-td-center">操作</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">ユーザー名</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">表示名</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">状態</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">操作</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={4} className="admin-td" style={{ textAlign: 'center' }}>読み込み中...</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-sm text-slate-400 text-center">読み込み中...</td></tr>
             )}
             {users.map((u) => (
               <UserRow
@@ -211,6 +228,6 @@ export function AdminPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (authed === null) return <div className="state-message">確認中...</div>;
+  if (authed === null) return <div className="text-sm text-slate-400 text-center py-16">確認中...</div>;
   return authed ? <AdminDashboard /> : <LoginForm />;
 }
