@@ -36,10 +36,31 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | 役割 | 採用技術 |
 |---|---|
 | フロントエンド | React 19 + Vite、GitHub Pages ホスト |
+| スタイリング | Tailwind CSS v3 + melta UI デザインシステム |
 | データベース | Supabase（PostgreSQL + RLS） |
 | 認証 | Supabase Auth |
 | RSS収集・AI処理 | GitHub Actions（毎時cron）+ Groq API |
 | X(Twitter)収集 | RSSHub（自前VPS: http://210.131.219.93:1200） |
+
+## melta UI デザイン規約
+
+仕様詳細は `docs/melta/CLAUDE.md` および `docs/melta/rush-ui-redesign.md` を参照。
+
+### 基本原則
+- カード: `bg-white rounded-xl border border-slate-200 shadow-sm`
+- ホバー: `hover:shadow-md transition-shadow duration-200`
+- **禁止:** `border-l-4` / `border-t-4` によるカテゴリカラーバー
+- ボディテキスト: `text-body`（#3d4b5f）、見出し: `text-slate-900`
+- ナビアクティブ: `text-primary-500 bg-primary-50`、`aria-current="page"`
+
+### カラートークン（Tailwind拡張）
+- `primary-500` = #2b70ef（アクセント）
+- `text-body` = #3d4b5f（カスタムユーティリティ）
+
+### ダークモード
+- `html[data-theme="dark"]` 属性で切り替え
+- index.css の CSS変数 + Tailwindクラス上書きで対応
+- Tailwind の `dark:` バリアントは現在未使用
 
 ## Supabase テーブル構成
 
