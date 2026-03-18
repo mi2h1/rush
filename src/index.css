@@ -1,4 +1,54 @@
-/* ── CSS変数 ─────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── melta UI セマンティックCSS変数 ─────────────── */
+:root {
+  /* Light theme (default) */
+  --bg-page:        #f9fafb;
+  --bg-page-alt:    #f3f4f6;
+  --bg-surface:     #ffffff;
+  --bg-surface-alt: #f9fafb;
+  --text-heading:   #0f172a;
+  --text-default:   #3d4b5f;
+  --text-muted:     #64748b;
+  --border-default: #e2e8f0;
+  --border-strong:  #cbd5e1;
+  --input-bg:       #ffffff;
+  --input-border:   #cbd5e1;
+}
+
+html[data-theme="dark"] {
+  --bg-page:        #0f172a;
+  --bg-page-alt:    #1e293b;
+  --bg-surface:     #1e293b;
+  --bg-surface-alt: #0f172a;
+  --text-heading:   #f1f5f9;
+  --text-default:   #cbd5e1;
+  --text-muted:     #94a3b8;
+  --border-default: #334155;
+  --border-strong:  #475569;
+  --input-bg:       #0f172a;
+  --input-border:   #475569;
+}
+
+/* Tailwind v3 用カスタムユーティリティ */
+@layer utilities {
+  .text-body        { color: var(--text-default); }
+  .text-heading     { color: var(--text-heading); }
+  .text-muted       { color: var(--text-muted); }
+  .bg-page          { background-color: var(--bg-page); }
+  .bg-surface       { background-color: var(--bg-surface); }
+  .border-default   { border-color: var(--border-default); }
+  .skeleton-pulse   { animation: skeleton-pulse 1.5s ease-in-out infinite; }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── 既存CSS変数（移行期間中は維持） ────────────── */
 :root {
   --bg: #09090d;
   --surface: #0e0e15;
