@@ -12,12 +12,10 @@ export function Layout({ header, sidebar, children }: Props) {
       <div className="flex-shrink-0 relative z-30">
         {header}
       </div>
-      <div className="flex flex-1 overflow-hidden">
-        {sidebar}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          {children}
-        </main>
-      </div>
+      <div className="flex-shrink-0">{sidebar}</div>
+      <main className="flex-1 overflow-y-auto bg-gray-50">
+        {children}
+      </main>
     </div>
   );
 }
