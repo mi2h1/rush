@@ -48,6 +48,70 @@ html[data-theme="dark"] {
   50%       { opacity: 0.4; }
 }
 
+/* ── ダークモード（Tailwindクラス上書き） ────────── */
+html[data-theme="dark"] body {
+  background-color: #0f172a;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #1e293b;
+}
+
+html[data-theme="dark"] .bg-gray-50 {
+  background-color: #0f172a;
+}
+
+html[data-theme="dark"] .bg-gray-100,
+html[data-theme="dark"] .bg-slate-100 {
+  background-color: #253047;
+}
+
+html[data-theme="dark"] .bg-slate-200 {
+  background-color: #334155;
+}
+
+html[data-theme="dark"] .border-slate-200 {
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .border-slate-300 {
+  border-color: #475569;
+}
+
+html[data-theme="dark"] .text-slate-900 {
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .text-slate-700 {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .text-slate-600 {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .text-slate-500 {
+  color: #64748b;
+}
+
+html[data-theme="dark"] .text-slate-400 {
+  color: #475569;
+}
+
+html[data-theme="dark"] .hover\:bg-gray-50:hover,
+html[data-theme="dark"] .hover\:bg-gray-100:hover {
+  background-color: #334155;
+}
+
+html[data-theme="dark"] .hover\:shadow-md:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="dark"] .shadow-sm {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 /* ── 既存CSS変数（移行期間中は維持） ────────────── */
 :root {
   --bg: #09090d;
