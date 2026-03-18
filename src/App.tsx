@@ -96,15 +96,15 @@ export default function App() {
               {!loading && (
                 <div className="flex flex-col gap-8">
                   <HeroSection articles={heroArticles} />
-                  <div className="top-body">
-                    <div className="top-left">
-                      <div className="top-services">
+                  <div className="flex gap-6 items-start">
+                    <div className="flex-1 min-w-0 flex flex-col gap-8">
+                      <div className="grid grid-cols-2 gap-4">
                         <ZennColumn />
                         <QiitaColumn />
                       </div>
                       <HotSection articles={hotArticles} />
                     </div>
-                    <div className="top-right">
+                    <div className="w-80 flex-shrink-0">
                       <XTimeline articles={xArticles} loading={xLoading} displayNames={xDisplayNames} />
                     </div>
                   </div>
