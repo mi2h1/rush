@@ -40,7 +40,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | データベース | Supabase（PostgreSQL + RLS） |
 | 認証 | Supabase Auth |
 | RSS収集・AI処理 | GitHub Actions（毎時cron）+ Groq API |
-| X(Twitter)収集 | RSSHub（自前VPS: http://210.131.219.93:1200） |
+| X(Twitter)収集 | RSSHub（自前VPS: http://210.131.219.93:1200）、`rsshub.service` としてsystemd管理 |
 
 ## melta UI デザイン規約
 
